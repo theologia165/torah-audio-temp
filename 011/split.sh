@@ -16,10 +16,10 @@ while IFS=$'\t' read -r ref start end; do
   echo "Splitting $ref: $start -> $end"
   out="011/output/${ref}.mp3"
   if [[ "$end" == "EOF" ]]; then
-    ffmpeg -hide_banner -loglevel error -y -ss "$start" -i 011/source/Noach-4-source.mp3 -map_metadata -1 -vn -c:a libmp3lame -q:a 2 "$out"
+    ffmpeg -nostdin -hide_banner -loglevel error -y -ss "$start" -i 011/source/Noach-4-source.mp3 -map_metadata -1 -vn -c:a libmp3lame -q:a 2 "$out"
   else
     dur=$(awk -v e="$end" -v s="$start" 'BEGIN{printf "%.6f", e-s}')
-    ffmpeg -hide_banner -loglevel error -y -ss "$start" -i 011/source/Noach-4-source.mp3 -t "$dur" -map_metadata -1 -vn -c:a libmp3lame -q:a 2 "$out"
+    ffmpeg -nostdin -hide_banner -loglevel error -y -ss "$start" -i 011/source/Noach-4-source.mp3 -t "$dur" -map_metadata -1 -vn -c:a libmp3lame -q:a 2 "$out"
   fi
   actual=$(ffprobe -v error -show_entries format=duration -of default=nw=1:nk=1 "$out")
   printf '%s\t%s\n' "$ref" "$actual" >> 011/output/durations.tsv
