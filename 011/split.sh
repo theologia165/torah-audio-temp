@@ -8,7 +8,9 @@ curl -fL "$LABEL_URL" -o 011/source/Noach-4-labels.txt
 rm -f 011/output/*.mp3 011/output/durations.tsv
 printf 'reference\tduration_seconds\n' > 011/output/durations.tsv
 while IFS=$'\t' read -r ref start end; do
+  [[ -z "${ref:-}" ]] && continue
   [[ "$ref" == "reference" ]] && continue
+  [[ "$ref" == \#* ]] && continue
   out="011/output/${ref}.mp3"
   if [[ "$end" == "EOF" ]]; then
     ffmpeg -hide_banner -loglevel error -y -ss "$start" -i 011/source/Noach-4-source.mp3 -map_metadata -1 -vn -c:a libmp3lame -q:a 2 "$out"
