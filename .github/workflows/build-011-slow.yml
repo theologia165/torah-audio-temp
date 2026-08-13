@@ -1,0 +1,47 @@
+name: Build 011 slowed verse audio
+on:
+  push:
+    paths:
+      - '.github/workflows/build-011-slow.yml'
+      - '011/speed.tsv'
+      - '011/output/**'
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - name: Build slowed clips
+        shell: bash
+        run: |
+          set -euo pipefail
+          factor=$(awk -F '\t' '$1=="atempo"{print $2}' 011/speed.tsv)
+          test -n "$factor"
+          mkdir -p 011/output-slow
+          rm -f 011/output-slow/*.mp3 011/output-slow/durations.tsv
+          printf 'reference\tduration_seconds\n' > 011/output-slow/durations.tsv
+          count=0
+          for src in 011/output/Genesis-*.mp3; do
+            [ -f "$src" ] || continue
+            name=$(basename "$src")
+            out="011/output-slow/$name"
+            ffmpeg -hide_banner -loglevel error -nostdin -y -i "$src" -af "atempo=$factor" -map_metadata -1 -vn -c:a libmp3lame -q:a 2 "$out"
+            d=$(ffprobe -v error -show_entries format=duration -of default=nw=1:nk=1 "$out")
+            printf '%s\t%s\n' "${name%.mp3}" "$d" >> 011/output-slow/durations.tsv
+            count=$((count+1))
+          done
+          if [ "$count" -ne 15 ]; then
+            echo "Expected 15 slowed clips, generated $count" >&2
+            exit 1
+          fi
+      - name: Commit slowed clips
+        run: |
+          git config user.name 'torah-audio-bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add 011/output-slow
+          git diff --cached --quiet && exit 0
+          git commit -m 'Generate 011 slowed audio matching 010 pace'
+          git push
