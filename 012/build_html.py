@@ -1,4 +1,4 @@
-import urllib.request, xml.etree.ElementTree as ET, re, html, pathlib
+import urllib.request, xml.etree.ElementTree as ET, html, pathlib
 NS={'o':'http://www.bibletechnologies.net/2003/OSIS/namespace'}
 xml=urllib.request.urlopen('https://raw.githubusercontent.com/openscriptures/morphhb/master/wlc/Gen.xml').read()
 root=ET.fromstring(xml)
@@ -16,13 +16,15 @@ G={
 POS={'V':'動詞','N':'名詞','A':'形容詞/数詞','R':'前置詞','C':'接続詞','P':'代名詞','T':'小辞','D':'副詞'}
 STEM={'q':'Qal','N':'Niphal','p':'Piel','P':'Pual','h':'Hiphil','H':'Hophal','t':'Hithpael'}
 def decode(m):
-    core=m.split('/')[-1]
-    if core.startswith('H'): core=core[1:]
+    raw=m[1:] if m.startswith('H') else m
+    parts=raw.split('/')
+    lexical=[p for p in parts if p and not p.startswith('S')]
+    core=lexical[-1] if lexical else (parts[0] if parts else '')
     pos=POS.get(core[:1],'機能語')
-    stem='—'; infl=core
+    stem='—'
     if core.startswith('V') and len(core)>1:
         stem=STEM.get(core[1],'—')
-    return pos,stem,infl
+    return pos,stem,raw
 
 def baselemma(s):
     return 'H'+s.split('/')[-1].split()[0]
@@ -41,7 +43,7 @@ def make(v):
             gl=next(gloss_iter)
             lemma=baselemma(child.attrib.get('lemma',''))
             pos,stem,infl=decode(child.attrib.get('morph',''))
-            pieces.append(f'<span class="unit" tabindex="0"><span class="hw">{html.escape(word)}</span><span class="gl">{html.escape(gl)}</span><span class="pop"><b>{html.escape(lemma)}</b><span>品詞：{html.escape(pos)}</span><span>語幹：{html.escape(stem)}</span><span>活用：{html.escape(infl)}</span></span></span>')
+            pieces.append(f'<span class="unit" tabindex="0"><span class="hw">{html.escape(word)}</span><span class="gl">{html.escape(gl)}</span><span class="pop"><b>lemma：{html.escape(lemma)}</b><span>品詞：{html.escape(pos)}</span><span>語幹：{html.escape(stem)}</span><span>活用：{html.escape(infl)}</span></span></span>')
         elif tag=='seg':
             t=child.attrib.get('type','')
             if t=='x-maqqef': pieces.append('<span class="pun">־</span>')
