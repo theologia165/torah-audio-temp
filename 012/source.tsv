@@ -1,0 +1,8 @@
+field	value
+parasha	Noach
+aliyah	5
+range	Genesis 9:8-17
+source_audio	https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/audio/Noach-5.mp3
+source_labels	https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/torah/labels/Noach-5.txt
+study_atempo	0.653986
+note	Second-method physical split; preserve original clips and create separate study-speed clips.
