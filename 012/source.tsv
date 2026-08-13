@@ -4,5 +4,7 @@ aliyah	5
 range	Genesis 9:8-17
 source_audio	https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/audio/Noach-5.mp3
 source_labels	https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/torah/labels/Noach-5.txt
-study_atempo	0.653986
-note	Second-method physical split; preserve original clips and create separate study-speed clips.
+study_atempo	0.548141
+reference_011_final_wps	0.793064
+estimated_012_original_wps	1.446825
+note	Second-method physical split. Study atempo is calibrated by words/sec to the user-approved 011 final effective rate; preserve original clips separately.
