@@ -1,0 +1,7 @@
+reference	value
+basis	match-010-effective-word-rate
+010_words_per_second	0.634452
+011_words_per_second	1.212662
+atempo	0.523189
+duration_multiplier	1.911355
+note	Original split files remain in 011/output; slowed files are generated separately in 011/output-slow.
