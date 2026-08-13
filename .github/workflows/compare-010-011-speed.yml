@@ -1,0 +1,56 @@
+name: Compare 010 and 011 reading speed
+on:
+  push:
+    paths:
+      - '.github/workflows/compare-010-011-speed.yml'
+permissions:
+  contents: write
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - name: Measure reading speed
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p speed-check/010
+          base='https://images.shulcloud.com/14396'
+          ids=(418232 418233 418235 418234 418236 418237 418238 418239 418240 418241 418242 418243 418244 418245 418246 418247 418249 418248 418250 418251 418253 418252)
+          total010=0
+          : > speed-check/010-durations.tsv
+          printf 'file\tduration_seconds\n' >> speed-check/010-durations.tsv
+          for id in "${ids[@]}"; do
+            curl -fsSL "$base/$id.mp3" -o "speed-check/010/$id.mp3"
+            d=$(ffprobe -v error -show_entries format=duration -of default=nw=1:nk=1 "speed-check/010/$id.mp3")
+            printf '%s\t%s\n' "$id.mp3" "$d" >> speed-check/010-durations.tsv
+            total010=$(awk -v a="$total010" -v b="$d" 'BEGIN{printf "%.6f",a+b}')
+          done
+          curl -fsSL 'https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/audio/Noach-4.mp3' -o speed-check/Noach-4.mp3
+          total011=$(ffprobe -v error -show_entries format=duration -of default=nw=1:nk=1 speed-check/Noach-4.mp3)
+          labels3=$(curl -fsSL 'https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/torah/labels/Noach-3.txt')
+          labels4=$(curl -fsSL 'https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/torah/labels/Noach-4.txt')
+          words010=$(awk -F',' '{print NF}' <<< "$labels3")
+          words011=$(awk -F',' '{print NF}' <<< "$labels4")
+          wps010=$(awk -v w="$words010" -v d="$total010" 'BEGIN{printf "%.6f",w/d}')
+          wps011=$(awk -v w="$words011" -v d="$total011" 'BEGIN{printf "%.6f",w/d}')
+          factor=$(awk -v target="$wps010" -v current="$wps011" 'BEGIN{printf "%.6f",target/current}')
+          stretch=$(awk -v f="$factor" 'BEGIN{printf "%.6f",1/f}')
+          cat > speed-check/comparison.tsv <<EOF
+          item	words	duration_seconds	words_per_second
+          010	$words010	$total010	$wps010
+          011	$words011	$total011	$wps011
+          recommended_atempo	$factor		
+          duration_multiplier	$stretch		
+          EOF
+      - name: Commit measurements
+        run: |
+          rm -rf speed-check/010 speed-check/Noach-4.mp3
+          git config user.name 'torah-audio-bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add speed-check/010-durations.tsv speed-check/comparison.tsv
+          git diff --cached --quiet && exit 0
+          git commit -m 'Measure 010 and 011 reading speeds'
+          git push
