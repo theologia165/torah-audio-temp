@@ -1,0 +1,83 @@
+name: Build 012 verse audio
+
+on:
+  push:
+    paths:
+      - '012/source.tsv'
+      - '012/verse-word-counts.tsv'
+      - '.github/workflows/build-012-audio.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - name: Download source and labels
+        run: |
+          set -euo pipefail
+          mkdir -p 012/source 012/output 012/output-study
+          audio=$(awk -F '\t' '$1=="source_audio"{print $2}' 012/source.tsv)
+          labels=$(awk -F '\t' '$1=="source_labels"{print $2}' 012/source.tsv)
+          curl -fL "$audio" -o 012/source/Noach-5.mp3
+          curl -fL "$labels" -o 012/source/Noach-5.txt
+      - name: Build boundary manifest
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          stamps=[float(x) for x in Path('012/source/Noach-5.txt').read_text().strip().split(',') if x.strip()]
+          rows=[]
+          total=0
+          for line in Path('012/verse-word-counts.tsv').read_text().splitlines()[1:]:
+              ref,n=line.split('\t')
+              n=int(n)
+              start=stamps[total]
+              total += n
+              end=stamps[total] if total < len(stamps) else None
+              rows.append((ref,start,end,n))
+          if total != len(stamps):
+              raise SystemExit(f'word-count mismatch: verse total={total}, labels={len(stamps)}')
+          out=['reference\tstart\tend\twords']
+          for ref,start,end,n in rows:
+              out.append(f'{ref}\t{start:.6f}\t{("EOF" if end is None else f"{end:.6f}")}\t{n}')
+          Path('012/boundaries.tsv').write_text('\n'.join(out)+'\n')
+          PY
+      - name: Split and retime clips
+        run: |
+          set -euo pipefail
+          factor=$(awk -F '\t' '$1=="study_atempo"{print $2}' 012/source.tsv)
+          tail -n +2 012/boundaries.tsv | while IFS=$'\t' read -r ref start end words; do
+            normal="012/output/${ref}.mp3"
+            study="012/output-study/${ref}.mp3"
+            if [ "$end" = "EOF" ]; then
+              ffmpeg -nostdin -y -ss "$start" -i 012/source/Noach-5.mp3 -codec:a libmp3lame -q:a 2 "$normal"
+            else
+              dur=$(python3 -c "print(float('$end')-float('$start'))")
+              ffmpeg -nostdin -y -ss "$start" -t "$dur" -i 012/source/Noach-5.mp3 -codec:a libmp3lame -q:a 2 "$normal"
+            fi
+            ffmpeg -nostdin -y -i "$normal" -af "atempo=$factor" -codec:a libmp3lame -q:a 2 "$study"
+          done
+          test "$(find 012/output -name 'Genesis-*.mp3' | wc -l)" -eq 10
+          test "$(find 012/output-study -name 'Genesis-*.mp3' | wc -l)" -eq 10
+          {
+            echo -e 'reference\tduration_seconds'
+            for f in 012/output-study/Genesis-*.mp3; do
+              ref=$(basename "$f" .mp3)
+              d=$(ffprobe -v error -show_entries format=duration -of default=nw=1:nk=1 "$f")
+              echo -e "$ref\t$d"
+            done
+          } > 012/output-study/durations.tsv
+      - name: Commit generated audio
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add 012
+          if ! git diff --cached --quiet; then
+            git commit -m 'Build 012 verse audio'
+            git push
+          fi
