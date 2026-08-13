@@ -1,0 +1,34 @@
+name: Build 011 verse audio
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '011/boundaries.tsv'
+      - '011/split.sh'
+      - '.github/workflows/build-011-audio.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - name: Split audio
+        run: bash 011/split.sh
+      - name: Commit generated audio
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add 011/source/Noach-4-source.mp3 011/source/Noach-4-labels.txt 011/output/*.mp3 011/output/durations.tsv
+          if git diff --cached --quiet; then
+            echo 'No generated changes.'
+          else
+            git commit -m 'Generate 011 verse audio clips'
+            git push
+          fi
