@@ -1,0 +1,39 @@
+name: Repair 013 audio boundaries
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '013/repair_audio_pocket.py'
+      - '.github/workflows/repair-013-audio.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install ffmpeg
+        run: sudo apt-get update -qq && sudo apt-get install -y ffmpeg
+      - name: Download PocketTorah source data
+        run: |
+          curl -L --fail -o 013/Noach-6.mp3 https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/audio/Noach-6.mp3
+          curl -L --fail -o 013/Noach-6.txt https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/torah/labels/Noach-6.txt
+          curl -L --fail -o 013/Genesis-pocket.json https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/torah/json/Genesis.json
+      - name: Rebuild all 44 verse clips with PocketTorah token boundaries
+        run: python 013/repair_audio_pocket.py
+      - name: Commit repaired audio and boundary data
+        run: |
+          rm -f 013/Noach-6.mp3 013/Noach-6.txt 013/Genesis-pocket.json
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add 013/audio 013/boundaries.tsv 013/verse-word-counts.tsv 013/source.tsv
+          if git diff --cached --quiet; then
+            echo 'No changes to commit'
+          else
+            git commit -m 'Repair 013 audio with PocketTorah verse token boundaries'
+            git push
+          fi
