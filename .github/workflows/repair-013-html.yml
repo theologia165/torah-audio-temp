@@ -1,0 +1,21 @@
+name: Repair 013 Genesis 10 HTML
+on:
+  push:
+    branches: [main]
+    paths:
+      - '013/repair_html_10.py'
+      - '.github/workflows/repair-013-html.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python 013/repair_html_10.py
+      - run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add 013/html-fixed
+          git diff --cached --quiet || (git commit -m 'Rebuild corrected 013 Genesis 10 interlinear HTML' && git push)
