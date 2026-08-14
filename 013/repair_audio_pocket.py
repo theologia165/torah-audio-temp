@@ -6,7 +6,7 @@ AUDIO.mkdir(parents=True, exist_ok=True)
 
 REFS = [(9, v) for v in range(18, 30)] + [(10, v) for v in range(1, 33)]
 TARGET_WPS = 0.793064
-STUDY_ATEMPO = 0.609926  # preserve the accepted 013 playback speed; this repair changes boundaries only
+STUDY_ATEMPO = 0.609926
 
 with open(BASE / "Genesis-pocket.json", encoding="utf-8") as f:
     data = json.load(f)
@@ -30,7 +30,8 @@ duration = float(subprocess.check_output([
     "-of", "default=nk=1:nw=1", str(BASE / "Noach-6.mp3")
 ], text=True).strip())
 
-# Dump the exact PocketTorah word -> label mapping used by its player.
+# PocketTorah's own word/timestamp mapping. Its app uses each label as a word-onset
+# cue. Keep this map as an audit trail.
 map_lines = ["reference\tverse_word\tglobal_word\ttime\tword\n"]
 gi = 0
 for ch, v in REFS:
@@ -40,9 +41,18 @@ for ch, v in REFS:
         gi += 1
 (BASE / "pocket-word-timestamps.tsv").write_text("".join(map_lines), encoding="utf-8")
 
-# Find actual quiet gaps around nominal verse transitions. Labels are word-onset
-# markers for highlighting; a clean clip boundary should fall in the adjacent
-# inter-verse pause rather than on a consonant onset.
+# Nominal transitions from the first-word labels.
+idx = 0
+nominal = []
+for ref, count in counts:
+    start = labels[idx]
+    idx += count
+    end = labels[idx] if idx < len(labels) else duration
+    nominal.append((ref, start, end, count))
+
+# Detect quiet inter-verse gaps. Cutting exactly on a word-onset label can retain
+# the tail of the previous verse or shave the attack of the next one. Therefore,
+# whenever a quiet gap exists near the nominal transition, cut at its midpoint.
 proc = subprocess.run([
     "ffmpeg", "-nostdin", "-hide_banner", "-i", str(BASE / "Noach-6.mp3"),
     "-af", "silencedetect=noise=-38dB:d=0.06", "-f", "null", "-"
@@ -55,30 +65,36 @@ for line in proc.stderr.splitlines():
         ss = float(m.group(1))
     m = re.search(r"silence_end: ([0-9.]+)", line)
     if m and ss is not None:
-        ee = float(m.group(1)); silences.append((ss, ee, (ss + ee) / 2)); ss = None
+        ee = float(m.group(1))
+        silences.append((ss, ee, (ss + ee) / 2))
+        ss = None
 
-idx = 0
-nominal = []
-for ref, count in counts:
-    start = labels[idx]
-    idx += count
-    end = labels[idx] if idx < len(labels) else duration
-    nominal.append((ref, start, end, count))
-
-analysis = ["after_reference\tnominal_transition\tsilence_start\tsilence_end\tsilence_mid\tdelta_mid\n"]
+transitions = []
+analysis = ["after_reference\tnominal_transition\tchosen_transition\tsilence_start\tsilence_end\tmethod\n"]
 for i in range(len(nominal)-1):
     ref, _, t, _ = nominal[i]
     candidates = [s for s in silences if abs(s[2] - t) <= 1.25]
     if candidates:
         s = min(candidates, key=lambda x: abs(x[2] - t))
-        analysis.append(f"{ref}\t{t:.6f}\t{s[0]:.6f}\t{s[1]:.6f}\t{s[2]:.6f}\t{s[2]-t:+.6f}\n")
+        chosen = s[2]
+        method = "silence_mid"
+        analysis.append(f"{ref}\t{t:.6f}\t{chosen:.6f}\t{s[0]:.6f}\t{s[1]:.6f}\t{method}\n")
     else:
-        analysis.append(f"{ref}\t{t:.6f}\t\t\t\t\n")
+        chosen = t
+        method = "word_onset_fallback"
+        analysis.append(f"{ref}\t{t:.6f}\t{chosen:.6f}\t\t\t{method}\n")
+    transitions.append(chosen)
 (BASE / "boundary-analysis.tsv").write_text("".join(analysis), encoding="utf-8")
 
-# For this diagnostic run, preserve the nominal clips; a subsequent verified
-# repair will switch boundaries to the confirmed inter-verse pauses.
-bounds = nominal
+# Build contiguous verse clips: first starts at 0, last ends at source duration.
+bounds = []
+for i, (ref, _, _, count) in enumerate(nominal):
+    start = 0.0 if i == 0 else transitions[i-1]
+    end = duration if i == len(nominal)-1 else transitions[i]
+    if end <= start:
+        raise SystemExit(f"invalid repaired boundary {ref}: {start}..{end}")
+    bounds.append((ref, start, end, count))
+
 for ref, start, end, count in bounds:
     out = AUDIO / f"013-{ref}-study.mp3"
     af = f"atrim=start={start:.6f}:end={end:.6f},asetpts=PTS-STARTPTS,atempo={STUDY_ATEMPO:.6f}"
@@ -106,6 +122,7 @@ original_wps = word_total / duration
     "source_audio\thttps://raw.githubusercontent.com/rneiss/PocketTorah/master/data/audio/Noach-6.mp3\n"
     "source_labels\thttps://raw.githubusercontent.com/rneiss/PocketTorah/master/data/torah/labels/Noach-6.txt\n"
     "token_source\thttps://raw.githubusercontent.com/rneiss/PocketTorah/master/data/torah/json/Genesis.json\n"
+    "boundary_method\tPocketTorah word onsets + nearest inter-verse silence midpoint\n"
     f"study_atempo\t{STUDY_ATEMPO:.6f}\n"
     f"reference_wps\t{TARGET_WPS:.6f}\n"
     f"original_wps\t{original_wps:.6f}\n",
@@ -113,7 +130,8 @@ original_wps = word_total / duration
 )
 
 print(json.dumps({
-    "verses": len(counts), "pocket_words": word_total, "labels": len(labels),
+    "verses": len(bounds), "pocket_words": word_total, "labels": len(labels),
     "duration": duration, "study_atempo": STUDY_ATEMPO,
-    "first_three": bounds[:3], "silences": len(silences)
+    "first_three": bounds[:3],
+    "fallback_transitions": sum(1 for line in analysis if "word_onset_fallback" in line)
 }, ensure_ascii=False))
