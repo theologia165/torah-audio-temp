@@ -23,17 +23,17 @@ jobs:
           curl -L --fail -o 013/Noach-6.mp3 https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/audio/Noach-6.mp3
           curl -L --fail -o 013/Noach-6.txt https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/torah/labels/Noach-6.txt
           curl -L --fail -o 013/Genesis-pocket.json https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/torah/json/Genesis.json
-      - name: Rebuild all 44 verse clips with PocketTorah token boundaries
+      - name: Rebuild all 44 verse clips and analyze boundaries
         run: python 013/repair_audio_pocket.py
       - name: Commit repaired audio and boundary data
         run: |
           rm -f 013/Noach-6.mp3 013/Noach-6.txt 013/Genesis-pocket.json
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add 013/audio 013/boundaries.tsv 013/verse-word-counts.tsv 013/source.tsv
+          git add 013/audio 013/boundaries.tsv 013/verse-word-counts.tsv 013/source.tsv 013/pocket-word-timestamps.tsv 013/boundary-analysis.tsv
           if git diff --cached --quiet; then
             echo 'No changes to commit'
           else
-            git commit -m 'Repair 013 audio with PocketTorah verse token boundaries'
+            git commit -m 'Analyze 013 PocketTorah verse boundaries'
             git push
           fi
