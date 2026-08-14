@@ -4,6 +4,7 @@ aliyah	6
 range	Genesis 9:18-10:32
 source_audio	https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/audio/Noach-6.mp3
 source_labels	https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/torah/labels/Noach-6.txt
+token_source	https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/torah/json/Genesis.json
 study_atempo	0.609926
 reference_wps	0.793064
 original_wps	1.300263
