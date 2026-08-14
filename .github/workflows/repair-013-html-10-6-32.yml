@@ -1,0 +1,31 @@
+name: Repair 013 Genesis 10:6-32 HTML
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '013/repair_html_10_6_32.py'
+      - '.github/workflows/repair-013-html-10-6-32.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Rebuild corrected HTML
+        run: python 013/repair_html_10_6_32.py
+      - name: Commit corrected HTML
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add 013/html-fixed/Genesis-10-*-r3.html
+          if git diff --cached --quiet; then
+            echo 'No changes to commit'
+          else
+            git commit -m 'Repair Genesis 10:6-32 interlinear morphology labels'
+            git push
+          fi
