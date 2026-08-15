@@ -1,0 +1,10 @@
+field	value
+parasha	Noach
+aliyah	7
+range	Genesis 11:1-11:32
+source_audio	https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/audio/Noach-7.mp3
+source_labels	https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/torah/labels/Noach-7.txt
+source_tokens	https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/torah/json/Genesis.json
+study_atempo	0.574626
+reference_wps	0.793064
+original_wps	1.380138
