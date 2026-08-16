@@ -251,7 +251,19 @@ for v in range(1,14):
     rows.append((v,start,end,counts[v-1],methods[v-1] if v<13 else 'end of source'))
 (OUT/'boundaries.tsv').write_text('reference\tstart\tend\tpockettorah_tokens\tboundary_basis\n'+''.join(f'Genesis-12-{v}\t{s:.6f}\t{e:.6f}\t{c}\t{m}\n' for v,s,e,c,m in rows),encoding='utf-8')
 (OUT/'verse-word-counts.tsv').write_text('reference\tpockettorah_tokens\n'+''.join(f'Genesis-12-{v}\t{counts[v-1]}\n' for v in range(1,14)),encoding='utf-8')
-(OUT/'source.tsv').write_text(f'field\tvalue\nparasha\tLech-Lecha\naliyah\t1\nrange\tGenesis 12:1-12:13\nsource_audio\thttps://raw.githubusercontent.com/rneiss/PocketTorah/master/data/audio/Lech-Lecha-1.mp3\nsource_labels\thttps://raw.githubusercontent.com/rneiss/PocketTorah/master/data/torah/labels/lech-lecha-1.txt\nsource_tokens\thttps://raw.githubusercontent.com/rneiss/PocketTorah/master/data/torah/json/Genesis.json\nstudy_atempo\t{atempo:.6f}\nreference_wps\t{target_wps:.6f}\noriginal_wps\t{original_wps:.6f}\n',encoding='utf-8')
+(OUT/'source.tsv').write_text(f'field\tvalue\nparasha\tLech-Lecha\naliyah\t1\nrange\tGenesis 12:1-12:13\nprimary_sheets\thttps://www.sefaria.org/sheets/686258 ; https://www.sefaria.org/sheets/686259 ; https://www.sefaria.org/sheets/683772 ; https://www.sefaria.org/sheets/382031\nprimary_coverage\tGenesis 12:1-9,12-13\nfallback_coverage\tGenesis 12:10-11\nfallback_audio\thttps://raw.githubusercontent.com/rneiss/PocketTorah/master/data/audio/Lech-Lecha-1.mp3\nfallback_labels\thttps://raw.githubusercontent.com/rneiss/PocketTorah/master/data/torah/labels/lech-lecha-1.txt\nfallback_tokens\thttps://raw.githubusercontent.com/rneiss/PocketTorah/master/data/torah/json/Genesis.json\nstudy_atempo\t{atempo:.6f}\nreference_wps\t{target_wps:.6f}\noriginal_wps\t{original_wps:.6f}\n',encoding='utf-8')
+AUDIO_MAP={
+1:('686258','438786'),2:('686258','438783'),3:('686258','438785'),4:('686258','438787'),
+5:('686259','438788'),6:('686259','438792'),7:('686259','438789'),
+8:('683772','438791'),9:('683772','438790'),12:('382031','438796'),13:('382031','438795')}
+audio_rows=['reference\tmethod\tevidence\tactual_notion_audio']
+for v in range(1,14):
+    if v in AUDIO_MAP:
+        sheet,media=AUDIO_MAP[v]
+        audio_rows.append(f'Genesis-12-{v}\tSefaria Full Verse Chanted\thttps://www.sefaria.org/sheets/{sheet}\thttps://images.shulcloud.com/14396/{media}.mp3')
+    else:
+        audio_rows.append(f'Genesis-12-{v}\tPocketTorah physical split\thttps://raw.githubusercontent.com/rneiss/PocketTorah/master/data/audio/Lech-Lecha-1.mp3\thttps://raw.githubusercontent.com/theologia165/torah-audio-temp/main/015/audio/015-Genesis-12-{v}-study.mp3')
+(OUT/'audio-map.tsv').write_text('\n'.join(audio_rows)+'\n',encoding='utf-8')
 
 intro='アブラムは、行き先の全貌を知らないまま、故郷と親族を離れて神が示す地へ向かいます。約束された祝福は彼一人の成功ではなく、地のすべての家族へ届くためのものでした。カナンに着いた彼は祭壇を築き、なお旅を続けます。しかし飢饉でエジプトへ下ると、恐れから妻サライに「妹」と名乗るよう求めます。信頼して踏み出す勇気と、危機の中で現れる弱さの両方を隠さない、アブラムの旅の始まりです。'
 parts=[f'''<callout icon="📖" color="blue_bg">
