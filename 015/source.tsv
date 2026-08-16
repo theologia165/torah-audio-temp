@@ -1,0 +1,10 @@
+field	value
+parasha	Lech-Lecha
+aliyah	1
+range	Genesis 12:1-12:13
+source_audio	https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/audio/Lech-Lecha-1.mp3
+source_labels	https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/torah/labels/lech-lecha-1.txt
+source_tokens	https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/torah/json/Genesis.json
+study_atempo	0.683307
+reference_wps	0.793064
+original_wps	1.160627
