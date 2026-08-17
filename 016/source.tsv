@@ -1,0 +1,13 @@
+field	value
+parasha	Lech-Lecha
+aliyah	2
+range	Genesis 12:14-13:4
+primary_sheets	https://www.sefaria.org/sheets/441357 ; https://www.sefaria.org/sheets/443968 ; https://www.sefaria.org/sheets/684292
+primary_coverage	Genesis 12:14-18,13:1-4
+fallback_coverage	Genesis 12:19-20
+fallback_audio	https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/audio/Lech-Lecha-2.mp3
+fallback_labels	https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/torah/labels/lech-lecha-2.txt
+fallback_tokens	https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/torah/json/Genesis.json
+study_atempo	0.651817
+reference_wps	0.793064
+original_wps	1.216697
