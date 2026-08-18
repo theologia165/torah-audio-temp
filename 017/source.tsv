@@ -1,0 +1,13 @@
+field	value
+parasha	Lech-Lecha
+aliyah	3
+range	Genesis 13:5-13:18
+primary_sheets	https://www.sefaria.org/sheets/445683
+primary_coverage	Genesis 13:13-15
+fallback_coverage	Genesis 13:5-12,13:16-18
+fallback_audio	https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/audio/Lech-Lecha-3.mp3
+fallback_labels	https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/torah/labels/lech-lecha-3.txt
+fallback_tokens	https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/torah/json/Genesis.json
+study_atempo	0.597476
+reference_wps	0.793064
+original_wps	1.327358
