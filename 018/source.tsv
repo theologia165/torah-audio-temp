@@ -1,0 +1,13 @@
+field	value
+parasha	Lech-Lecha
+aliyah	4
+range	Genesis 14:1-14:20
+primary_sheets	https://www.sefaria.org/sheets/381870
+primary_coverage	Genesis 14:1-4
+fallback_coverage	Genesis 14:5-20
+fallback_audio	https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/audio/Lech-Lecha-4.mp3
+fallback_labels	https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/torah/labels/Lech-lecha-4.txt
+fallback_tokens	https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/torah/json/Genesis.json
+study_atempo	0.673186
+reference_wps	0.793064
+original_wps	1.178075
