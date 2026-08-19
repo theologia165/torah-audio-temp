@@ -1,0 +1,39 @@
+name: Audit 018 audio boundaries 14-17 to 14-20
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '018/audit_17_20.py'
+      - '.github/workflows/audit-018-boundaries.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install ffmpeg
+        run: sudo apt-get update -qq && sudo apt-get install -y ffmpeg
+      - name: Download PocketTorah source data
+        run: |
+          curl -L --fail -o 018/Lech-Lecha-4.mp3 https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/audio/Lech-Lecha-4.mp3
+          curl -L --fail -o 018/Lech-lecha-4.txt https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/torah/labels/Lech-lecha-4.txt
+          curl -L --fail -o 018/Genesis-pocket.json https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/torah/json/Genesis.json
+      - name: Audit local verse boundaries
+        run: python 018/audit_17_20.py
+      - name: Commit audit data
+        run: |
+          rm -f 018/Lech-Lecha-4.mp3 018/Lech-lecha-4.txt 018/Genesis-pocket.json
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add 018/boundary-audit-17-20.tsv 018/silence-audit-17-20.tsv 018/label-context-16-20.tsv
+          if git diff --cached --quiet; then
+            echo 'No changes to commit'
+          else
+            git commit -m 'Audit 018 Genesis 14:17-20 audio boundaries'
+            git push
+          fi
