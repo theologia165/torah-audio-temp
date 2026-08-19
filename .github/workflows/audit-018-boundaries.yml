@@ -1,10 +1,11 @@
-name: Audit 018 audio boundaries 14-17 to 14-20
+name: Audit and repair 018 audio boundaries 14-17 to 14-20
 
 on:
   push:
     branches: [main]
     paths:
       - '018/audit_17_20.py'
+      - '018/repair_audio_17_20.py'
       - '.github/workflows/audit-018-boundaries.yml'
   workflow_dispatch:
 
@@ -12,7 +13,7 @@ permissions:
   contents: write
 
 jobs:
-  audit:
+  audit-and-repair:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,15 +26,17 @@ jobs:
           curl -L --fail -o 018/Genesis-pocket.json https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/torah/json/Genesis.json
       - name: Audit local verse boundaries
         run: python 018/audit_17_20.py
-      - name: Commit audit data
+      - name: Rebuild Genesis 14:17-20
+        run: python 018/repair_audio_17_20.py
+      - name: Commit audit and repaired audio
         run: |
           rm -f 018/Lech-Lecha-4.mp3 018/Lech-lecha-4.txt 018/Genesis-pocket.json
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add 018/boundary-audit-17-20.tsv 018/silence-audit-17-20.tsv 018/label-context-16-20.tsv
+          git add 018/boundary-audit-17-20.tsv 018/silence-audit-17-20.tsv 018/label-context-16-20.tsv 018/boundary-repair-17-20.tsv 018/boundaries.tsv 018/audio/018-Genesis-14-17-study.mp3 018/audio/018-Genesis-14-18-study.mp3 018/audio/018-Genesis-14-19-study.mp3 018/audio/018-Genesis-14-20-study.mp3
           if git diff --cached --quiet; then
             echo 'No changes to commit'
           else
-            git commit -m 'Audit 018 Genesis 14:17-20 audio boundaries'
+            git commit -m 'Repair 018 Genesis 14:17-20 audio boundaries'
             git push
           fi
