@@ -34,3 +34,5 @@ jobs:
             git commit -m 'Repair 018 Genesis 14:17-20 audio boundaries'
             git push
           fi
+      - name: Confirm repair artifact
+        run: test -s 018/boundary-repair-17-20.tsv
