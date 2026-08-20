@@ -1,0 +1,103 @@
+name: Repair 024 Genesis 19 audio
+
+on:
+  push:
+    paths:
+      - '.github/workflows/repair-024-audio.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    if: ${{ !contains(github.event.head_commit.message, '[audio-repair]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Rebuild chapter and cut at real pauses
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+          mkdir -p /tmp/repair024 /tmp/repair024/out
+          : > /tmp/repair024/list.txt
+          for n in $(seq 1 20); do
+            f="$GITHUB_WORKSPACE/024/audio/024-Genesis-19-${n}-study.mp3"
+            test -f "$f"
+            printf "file '%s'\n" "$f" >> /tmp/repair024/list.txt
+          done
+          ffmpeg -hide_banner -loglevel error -f concat -safe 0 -i /tmp/repair024/list.txt -c:a pcm_s16le -ar 44100 -ac 1 /tmp/repair024/full.wav
+          python3 - <<'PY'
+          import subprocess, pathlib
+          root=pathlib.Path('024/audio')
+          d=[]
+          for n in range(1,21):
+              f=root/f'024-Genesis-19-{n}-study.mp3'
+              x=float(subprocess.check_output(['ffprobe','-v','error','-show_entries','format=duration','-of','default=nw=1:nk=1',str(f)],text=True).strip())
+              d.append(x)
+          c=0.0
+          with open('/tmp/repair024/old_boundaries.txt','w') as o:
+              for n,x in enumerate(d[:-1],1):
+                  c+=x
+                  o.write(f'{n}\t{c:.6f}\n')
+          PY
+          ffmpeg -hide_banner -i /tmp/repair024/full.wav -af silencedetect=noise=-38dB:d=0.28 -f null - 2> /tmp/repair024/silence.log || true
+          python3 - <<'PY'
+          import re, subprocess, pathlib
+          log=pathlib.Path('/tmp/repair024/silence.log').read_text(errors='ignore')
+          starts=[float(x) for x in re.findall(r'silence_start: ([0-9.]+)',log)]
+          ends=[float(x) for x in re.findall(r'silence_end: ([0-9.]+)',log)]
+          sil=[]
+          for s,e in zip(starts,ends):
+              if e>s:
+                  sil.append((s,e,(s+e)/2,e-s))
+          old=[]
+          for line in pathlib.Path('/tmp/repair024/old_boundaries.txt').read_text().splitlines():
+              n,t=line.split('\t'); old.append((int(n),float(t)))
+          chosen=[]
+          prev=0.0
+          for n,t in old:
+              # Existing cuts are known to be early. Prefer the first substantial pause after each old cut.
+              cand=[x for x in sil if x[2] > max(t,prev+0.10) and x[2] <= t+5.0 and x[3] >= 0.32]
+              if cand:
+                  # Strongly prefer long pauses, but stay close to the old boundary.
+                  x=min(cand, key=lambda z: (0 if z[3]>=0.48 else 1, z[2]-t))
+              else:
+                  cand=[x for x in sil if x[2] > prev+0.10 and abs(x[2]-t)<=5.0]
+                  if not cand:
+                      raise RuntimeError(f'No usable pause near boundary after verse {n}: {t:.3f}')
+                  x=min(cand,key=lambda z:abs(z[2]-t))
+              chosen.append((n,t,*x))
+              prev=x[2]
+          total=float(subprocess.check_output(['ffprobe','-v','error','-show_entries','format=duration','-of','default=nw=1:nk=1','/tmp/repair024/full.wav'],text=True).strip())
+          cuts=[0.0]+[x[4] for x in chosen]+[total]
+          # Sanity: each resulting verse must be nontrivial and cuts monotonic.
+          for i in range(20):
+              if cuts[i+1]-cuts[i] < 1.0:
+                  raise RuntimeError(f'Implausibly short verse {i+1}: {cuts[i+1]-cuts[i]:.3f}s')
+          report=['Genesis 19 / 024 audio repair', 'cut = midpoint of detected silence after prior early cut', '']
+          for n,t,s,e,m,dur in chosen:
+              report.append(f'after v{n:02d}: old={t:.3f}s new={m:.3f}s shift=+{m-t:.3f}s silence={s:.3f}-{e:.3f} ({dur:.3f}s)')
+          report.append(f'total={total:.3f}s')
+          pathlib.Path('024/audio/024-repair-report.txt').write_text('\n'.join(report)+'\n')
+          for i in range(20):
+              out=f'/tmp/repair024/out/024-Genesis-19-{i+1}-study.mp3'
+              subprocess.run(['ffmpeg','-hide_banner','-loglevel','error','-y','-ss',f'{cuts[i]:.6f}','-to',f'{cuts[i+1]:.6f}','-i','/tmp/repair024/full.wav','-codec:a','libmp3lame','-q:a','2',out],check=True)
+          PY
+          cp /tmp/repair024/out/*.mp3 024/audio/
+      - name: Commit repaired audio
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add 024/audio/024-Genesis-19-*-study.mp3 024/audio/024-repair-report.txt
+          if git diff --cached --quiet; then
+            echo 'No changes'
+            exit 0
+          fi
+          git commit -m '[audio-repair] Repair 024 Genesis 19 verse boundaries'
+          git push
