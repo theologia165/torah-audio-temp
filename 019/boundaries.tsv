@@ -1,0 +1,11 @@
+reference	start	end	pockettorah_tokens	boundary_basis
+Genesis-14-21	0.000000	7.396880	11	low-volume midpoint 7.175710-7.618050
+Genesis-14-22	7.396880	14.725550	14	low-volume midpoint 14.355900-15.095200
+Genesis-14-23	14.725550	23.879200	16	low-volume midpoint 23.641500-24.116900
+Genesis-14-24	23.879200	36.831700	16	low-volume midpoint 36.178600-37.484800
+Genesis-15-1	36.831700	53.321100	19	low-volume midpoint 52.462700-54.179500
+Genesis-15-2	53.321100	65.792150	16	low-volume midpoint 65.146500-66.437800
+Genesis-15-3	65.792150	73.543550	12	low-volume midpoint 73.274300-73.812800
+Genesis-15-4	73.543550	83.018750	15	low-volume midpoint 82.672800-83.364700
+Genesis-15-5	83.018750	97.162850	18	low-volume midpoint 96.699100-97.626600
+Genesis-15-6	97.162850	106.945250	5	end of source

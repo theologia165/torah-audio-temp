@@ -1,0 +1,13 @@
+field	value
+parasha	Lech-Lecha
+aliyah	5
+range	Genesis 14:21-15:6
+primary_sheets	https://www.sefaria.org/sheets/382010 ; https://www.sefaria.org/sheets/381985
+primary_coverage	Genesis 15:1-4,15:6
+fallback_coverage	Genesis 14:21-24,15:5
+fallback_audio	https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/audio/Lech-Lecha-5.mp3
+fallback_labels	https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/torah/labels/lech-lecha-5.txt
+fallback_tokens	https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/torah/json/Genesis.json
+study_atempo	0.597285
+reference_wps	0.793064
+original_wps	1.327782
