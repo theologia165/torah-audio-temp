@@ -1,0 +1,7 @@
+field	value
+parasha	Vayera
+aliyah	3
+range	Genesis 19:1-19:20
+fallback_audio	https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/audio/Vayera-3.mp3
+fallback_labels	https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/torah/labels/Vayera-3.txt
+study_atempo	0.739931

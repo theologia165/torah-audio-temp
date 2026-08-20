@@ -1,0 +1,21 @@
+reference	start	end	pockettorah_tokens	boundary_basis
+Genesis-19-1	0.000000	17.185900	16	audited nearest pre-next-token low-volume midpoint -20dB 17.083900-17.287900
+Genesis-19-2	17.185900	36.001800	20	audited nearest pre-next-token low-volume midpoint -20dB 35.935000-36.068600
+Genesis-19-3	36.001800	47.077350	14	audited nearest pre-next-token low-volume midpoint -20dB 47.012000-47.142700
+Genesis-19-4	47.077350	62.011800	15	audited nearest pre-next-token low-volume midpoint -20dB 61.932900-62.090700
+Genesis-19-5	62.011800	74.870100	15	audited nearest pre-next-token low-volume midpoint -20dB 74.807100-74.933100
+Genesis-19-6	74.870100	86.020000	7	audited waveform low-volume midpoint -32dB-equivalent 85.820000-86.220000
+Genesis-19-7	86.020000	88.842400	5	audited nearest pre-next-token low-volume midpoint -20dB 88.695100-88.989700
+Genesis-19-8	88.842400	111.088000	29	audited nearest pre-next-token low-volume midpoint -20dB 111.020000-111.156000
+Genesis-19-9	111.088000	129.174500	20	audited nearest pre-next-token low-volume midpoint -20dB 129.073000-129.276000
+Genesis-19-10	129.174500	142.048500	12	audited nearest pre-next-token low-volume midpoint -20dB 141.949000-142.148000
+Genesis-19-11	142.048500	154.166500	13	audited nearest pre-next-token low-volume midpoint -20dB 154.103000-154.230000
+Genesis-19-12	154.166500	166.252500	18	audited nearest pre-next-token low-volume midpoint -20dB 166.011000-166.494000
+Genesis-19-13	166.252500	178.923000	15	audited nearest pre-next-token low-volume midpoint -20dB 178.858000-178.988000
+Genesis-19-14	178.923000	196.434500	22	audited nearest pre-next-token low-volume midpoint -20dB 196.350000-196.519000
+Genesis-19-15	196.434500	211.392000	19	audited nearest pre-next-token low-volume midpoint -20dB 211.311000-211.473000
+Genesis-19-16	211.392000	231.232000	16	audited nearest pre-next-token low-volume midpoint -20dB 231.165000-231.299000
+Genesis-19-17	231.232000	248.968000	19	audited nearest pre-next-token low-volume midpoint -20dB 248.906000-249.030000
+Genesis-19-18	248.968000	252.612500	6	audited nearest pre-next-token low-volume midpoint -20dB 252.511000-252.714000
+Genesis-19-19	252.612500	276.625000	23	audited nearest pre-next-token low-volume midpoint -20dB 276.548000-276.702000
+Genesis-19-20	276.625000	299.494000	17	end of source
