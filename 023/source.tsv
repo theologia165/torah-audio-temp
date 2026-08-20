@@ -1,0 +1,8 @@
+field	value
+parasha	Vayera
+aliyah	2
+range	Genesis 18:15-18:33
+primary_sheets	https://www.sefaria.org/sheets/438740 ; https://www.sefaria.org/sheets/443712 ; https://www.sefaria.org/sheets/515700 ; https://www.sefaria.org/sheets/487646
+fallback_audio	https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/audio/Vayera-2.mp3
+fallback_labels	https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/torah/labels/Vayera-2.txt
+study_atempo	0.698931

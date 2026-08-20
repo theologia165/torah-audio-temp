@@ -1,0 +1,20 @@
+reference	start	end	pockettorah_tokens	boundary_basis
+Genesis-18-15	0.000000	11.609050	11	audited low-volume midpoint -20dB 11.029100-12.189000
+Genesis-18-16	11.609050	21.337300	11	audited low-volume midpoint -20dB 20.887200-21.787400
+Genesis-18-17	21.337300	28.020850	8	audited low-volume midpoint -20dB 27.550600-28.491100
+Genesis-18-18	28.020850	38.782250	11	audited low-volume midpoint -20dB 37.840100-39.724400
+Genesis-18-19	38.782250	60.871450	25	audited low-volume midpoint -20dB 60.061400-61.681500
+Genesis-18-20	60.871450	71.459550	11	audited low-volume midpoint -20dB 70.614900-72.304200
+Genesis-18-21	71.459550	81.172550	11	audited low-volume midpoint -20dB 80.861500-81.483600
+Genesis-18-22	81.172550	88.474100	10	audited low-volume midpoint -20dB 88.170300-88.777900
+Genesis-18-23	88.474100	94.325600	8	audited low-volume midpoint -20dB 94.024000-94.627200
+Genesis-18-24	94.325600	108.033000	16	audited low-volume midpoint -28dB 106.891000-109.175000
+Genesis-18-25	108.033000	125.854500	20	audited low-volume midpoint -20dB 125.294000-126.415000
+Genesis-18-26	125.854500	136.243500	13	audited low-volume midpoint -20dB 135.549000-136.938000
+Genesis-18-27	136.243500	144.503500	12	audited low-volume midpoint -20dB 144.258000-144.749000
+Genesis-18-28	144.503500	160.339000	18	audited low-volume midpoint -20dB 159.574000-161.104000
+Genesis-18-29	160.339000	174.341500	14	audited low-volume midpoint -20dB 174.001000-174.682000
+Genesis-18-30	174.341500	189.822500	17	audited low-volume midpoint -20dB 189.337000-190.308000
+Genesis-18-31	189.822500	202.973000	16	audited low-volume midpoint -20dB 202.562000-203.384000
+Genesis-18-32	202.973000	217.838000	17	audited low-volume midpoint -20dB 217.506000-218.170000
+Genesis-18-33	217.838000	228.258000	10	end of source
