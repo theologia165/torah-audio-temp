@@ -1,0 +1,8 @@
+field	value
+parasha	Vayera
+aliyah	1
+range	Genesis 18:1-18:14
+primary_sheets	https://www.sefaria.org/sheets/687201 ; https://www.sefaria.org/sheets/687204 ; https://www.sefaria.org/sheets/502696 ; https://www.sefaria.org/sheets/519643
+fallback_audio	https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/audio/Vayera-1.mp3
+fallback_labels	https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/torah/labels/vayera-1.txt
+study_atempo	0.700879
