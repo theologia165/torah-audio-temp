@@ -1,0 +1,7 @@
+field	value
+parasha	Vayera
+aliyah	5
+range	Genesis 21:5-21:21
+fallback_audio	https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/audio/Vayera-5.mp3
+fallback_labels	https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/torah/labels/Vayera-5.txt
+study_atempo	0.673028
