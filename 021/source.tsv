@@ -1,0 +1,9 @@
+field	value
+parasha	Lech-Lecha
+aliyah	7
+range	Genesis 17:7-17:27
+primary_sheets	https://www.sefaria.org/sheets/574276 ; https://www.sefaria.org/sheets/594560 ; https://www.sefaria.org/sheets/594561 ; https://www.sefaria.org/sheets/594562 ; https://www.sefaria.org/sheets/594563 ; https://www.sefaria.org/sheets/594564
+primary_coverage	Genesis 17:7-27
+fallback_audio	https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/audio/Lech-Lecha-7.mp3
+fallback_labels	https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/torah/labels/lech-lecha-7.txt
+fallback_tokens	https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/torah/json/Genesis.json
