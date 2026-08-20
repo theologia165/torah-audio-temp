@@ -1,0 +1,13 @@
+field	value
+parasha	Lech-Lecha
+aliyah	6
+range	Genesis 15:7-17:6
+primary_sheets	https://www.sefaria.org/sheets/381985 ; https://www.sefaria.org/sheets/601529 ; https://www.sefaria.org/sheets/502597 ; https://www.sefaria.org/sheets/387175
+primary_coverage	Genesis 15:7-9,16:1-3,17:1-6
+fallback_coverage	remaining 25 verses
+fallback_audio	https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/audio/Lech-Lecha-6.mp3
+fallback_labels	https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/torah/labels/lech-lecha-6.txt
+fallback_tokens	https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/torah/json/Genesis.json
+study_atempo	0.667680
+reference_wps	0.793064
+original_wps	1.187791
