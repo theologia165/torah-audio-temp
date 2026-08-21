@@ -10,62 +10,28 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Rebuild chapter and cut at real pauses
-        shell: bash
+      - name: Install ffmpeg
+        run: sudo apt-get update -qq && sudo apt-get install -y ffmpeg
+      - name: Download PocketTorah source and official labels
         run: |
-          set -euo pipefail
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq ffmpeg
-          mkdir -p /tmp/repair024/out
-          : > /tmp/repair024/list.txt
-          for n in $(seq 1 20); do
-            f="$GITHUB_WORKSPACE/024/audio/024-Genesis-19-${n}-study.mp3"
-            test -f "$f"
-            printf "file '%s'\n" "$f" >> /tmp/repair024/list.txt
-          done
-          ffmpeg -hide_banner -loglevel error -f concat -safe 0 -i /tmp/repair024/list.txt -c:a pcm_s16le -ar 44100 -ac 1 /tmp/repair024/full.wav
-          python3 - <<'PY'
-          import subprocess, pathlib
-          root=pathlib.Path('024/audio'); ds=[]
-          for n in range(1,21):
-              f=root/f'024-Genesis-19-{n}-study.mp3'
-              ds.append(float(subprocess.check_output(['ffprobe','-v','error','-show_entries','format=duration','-of','default=nw=1:nk=1',str(f)],text=True).strip()))
-          c=0.0; out=[]
-          for n,x in enumerate(ds[:-1],1):
-              c+=x; out.append(f'{n}\t{c:.6f}')
-          pathlib.Path('/tmp/repair024/old_boundaries.txt').write_text('\n'.join(out)+'\n')
-          PY
-          ffmpeg -hide_banner -i /tmp/repair024/full.wav -af silencedetect=noise=-38dB:d=0.28 -f null - 2> /tmp/repair024/silence.log || true
-          python3 - <<'PY'
-          import re, subprocess, pathlib
-          log=pathlib.Path('/tmp/repair024/silence.log').read_text(errors='ignore')
-          starts=[float(x) for x in re.findall(r'silence_start: ([0-9.]+)',log)]
-          ends=[float(x) for x in re.findall(r'silence_end: ([0-9.]+)',log)]
-          sil=[(s,e,(s+e)/2,e-s) for s,e in zip(starts,ends) if e>s]
-          old=[]
-          for line in pathlib.Path('/tmp/repair024/old_boundaries.txt').read_text().splitlines():
-              n,t=line.split('\t'); old.append((int(n),float(t)))
-          chosen=[]; prev=0.0
-          for n,t in old:
-              cand=[x for x in sil if x[2]>max(t,prev+0.10) and x[2]<=t+5.0 and x[3]>=0.32]
-              if cand:
-                  x=min(cand,key=lambda z:(0 if z[3]>=0.48 else 1,z[2]-t))
-              else:
-                  cand=[x for x in sil if x[2]>prev+0.10 and abs(x[2]-t)<=5.0]
-                  if not cand: raise RuntimeError(f'No pause near v{n} boundary {t:.3f}')
-                  x=min(cand,key=lambda z:abs(z[2]-t))
-              chosen.append((n,t,*x)); prev=x[2]
-          total=float(subprocess.check_output(['ffprobe','-v','error','-show_entries','format=duration','-of','default=nw=1:nk=1','/tmp/repair024/full.wav'],text=True).strip())
-          cuts=[0.0]+[x[4] for x in chosen]+[total]
-          for i in range(20):
-              if cuts[i+1]-cuts[i]<1.0: raise RuntimeError(f'Short verse {i+1}')
-          report=['Genesis 19 / 024 audio repair','']+[f'after v{n:02d}: old={t:.3f}s new={m:.3f}s shift={m-t:+.3f}s silence={s:.3f}-{e:.3f} ({dur:.3f}s)' for n,t,s,e,m,dur in chosen]+[f'total={total:.3f}s']
-          pathlib.Path('/tmp/repair024/out/024-repair-report.txt').write_text('\n'.join(report)+'\n')
-          for i in range(20):
-              subprocess.run(['ffmpeg','-hide_banner','-loglevel','error','-y','-ss',f'{cuts[i]:.6f}','-to',f'{cuts[i+1]:.6f}','-i','/tmp/repair024/full.wav','-codec:a','libmp3lame','-q:a','2',f'/tmp/repair024/out/024-Genesis-19-{i+1}-study.mp3'],check=True)
-          PY
+          curl -L --fail -o 024/Vayera-3.mp3 https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/audio/Vayera-3.mp3
+          curl -L --fail -o 024/Vayera-3.txt https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/torah/labels/Vayera-3.txt
+      - name: Rebuild all Genesis 19:1-20 clips from source
+        run: python 024/repair_all_audio_r2.py | tee 024/repair-r2.log
+      - name: Verify repaired set
+        run: |
+          test "$(find 024/audio -maxdepth 1 -name '024-Genesis-19-*-r2-study.mp3' | wc -l)" -eq 20
+          test "$(find 024/audio-normal -maxdepth 1 -name '024-Genesis-19-*-r2.mp3' | wc -l)" -eq 20
+          grep -q '^Genesis-19-1' 024/boundaries-r2.tsv
+          grep -q '^Genesis-19-20' 024/boundaries-r2.tsv
+          grep -q 'PASS:' 024/repair-r2.log
       - uses: actions/upload-artifact@v4
         with:
-          name: repaired-024-audio
-          path: /tmp/repair024/out/*
+          name: repaired-024-audio-r2
+          path: |
+            024/audio/*-r2-study.mp3
+            024/audio-normal/*-r2.mp3
+            024/boundaries-r2.tsv
+            024/boundary-repair-r2.tsv
+            024/repair-r2.log
           retention-days: 1
