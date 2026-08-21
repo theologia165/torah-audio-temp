@@ -1,4 +1,4 @@
-name: Repair 024 all audio boundaries r2
+name: Repair 024 all audio boundaries r3
 
 on:
   push:
@@ -22,24 +22,25 @@ jobs:
         run: |
           curl -L --fail -o 024/Vayera-3.mp3 https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/audio/Vayera-3.mp3
           curl -L --fail -o 024/Vayera-3.txt https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/torah/labels/Vayera-3.txt
-      - name: Rebuild all Genesis 19:1-20 clips using last-token-to-next-onset audit
-        run: python 024/repair_all_audio_r2.py | tee 024/repair-r2.log
-      - name: Verify files and key audit conditions
+      - name: Rebuild Genesis 19 clips with safe final-word tails
+        run: python 024/repair_all_audio_r2.py | tee 024/repair-r3.log
+      - name: Verify files and all boundary conditions
         run: |
-          test "$(find 024/audio -maxdepth 1 -name '024-Genesis-19-*-r2-study.mp3' | wc -l)" -eq 20
-          test "$(find 024/audio-normal -maxdepth 1 -name '024-Genesis-19-*-r2.mp3' | wc -l)" -eq 20
-          grep -q '^Genesis-19-1' 024/boundaries-r2.tsv
-          grep -q '^Genesis-19-20' 024/boundaries-r2.tsv
-          grep -q 'PASS:' 024/repair-r2.log
+          test "$(find 024/audio -maxdepth 1 -name '024-Genesis-19-*-r3-study.mp3' | wc -l)" -eq 20
+          test "$(find 024/audio-normal -maxdepth 1 -name '024-Genesis-19-*-r3.mp3' | wc -l)" -eq 20
+          grep -q '^Genesis-19-1' 024/boundaries-r3.tsv
+          grep -q '^Genesis-19-20' 024/boundaries-r3.tsv
+          grep -q 'PASS:' 024/repair-r3.log
       - name: Commit repaired clips and boundary audit
         run: |
           rm -f 024/Vayera-3.mp3 024/Vayera-3.txt
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add 024/audio/*-r2-study.mp3 024/audio-normal/*-r2.mp3 024/boundaries-r2.tsv 024/boundary-repair-r2.tsv 024/repair-r2.log
+          git add 024/audio/*-r3-study.mp3 024/audio-normal/*-r3.mp3 024/boundaries-r3.tsv 024/repair-r3.log
           if git diff --cached --quiet; then
             echo 'No changes to commit'
           else
-            git commit -m 'Repair 024 Genesis 19:1-20 audio boundaries r2'
+            git commit -m 'Repair Genesis 19:3-20 final-word boundaries r3'
+            git pull --rebase origin main
             git push
           fi
