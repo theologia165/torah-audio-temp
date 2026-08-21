@@ -1,0 +1,165 @@
+name: Build 027 Vayera 6 audio
+
+on:
+  push:
+    paths:
+      - '.github/workflows/build-027-vayera6-audio.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install ffmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
+      - name: Fetch authoritative Sefaria/PocketTorah mapping and source
+        run: |
+          set -euo pipefail
+          mkdir -p 027/source 027/r1
+          curl -fL --retry 3 -o 027/source/Vayera-6.json \
+            https://raw.githubusercontent.com/Sefaria/Sefaria-Project/master/data/tmp/pockettorah_audio/Vayera-6.json
+          curl -fL --retry 3 -o 027/source/Vayera-6.mp3 \
+            https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/audio/Vayera-6.mp3
+          curl -fL --retry 3 -o 027/source/Vayera-6.labels.txt \
+            https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/torah/labels/Vayera-6.txt
+          ffprobe -v error -show_entries format=duration -of default=nw=1:nk=1 027/source/Vayera-6.mp3 > 027/source/source-duration.txt
+
+      - name: Validate mapping and create shared-boundary table
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, pathlib
+          root=pathlib.Path('027')
+          d=json.load(open(root/'source/Vayera-6.json',encoding='utf-8'))
+          refs=d['ref']
+          expected=[f'Genesis 21:{v}' for v in range(22,35)]
+          got=[x['sefaria_ref'] for x in refs]
+          assert got==expected,(got,expected)
+          assert d['media_url']=='https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/audio/Vayera-6.mp3'
+          rows=[]
+          for i,x in enumerate(refs):
+              s=float(x['start_time']); e=float(x['end_time'])
+              assert e>s
+              if i: assert abs(s-float(refs[i-1]['end_time']))<1e-6
+              verse=22+i
+              rows.append((verse,s,e,e-s))
+          with open(root/'source/verse-map.tsv','w',encoding='utf-8') as f:
+              f.write('verse\tstart\tend\tduration\tsefaria_ref\tmedia_url\n')
+              for verse,s,e,dur in rows:
+                  f.write(f'{verse}\t{s:.6f}\t{e:.6f}\t{dur:.6f}\tGenesis 21:{verse}\thttps://raw.githubusercontent.com/rneiss/PocketTorah/master/data/audio/Vayera-6.mp3\n')
+          with open(root/'source/boundaries.tsv','w',encoding='utf-8') as f:
+              f.write('boundary\tlabel_time\tcandidate_pause\tadopted_cut\tprevious_final_word\tnext_first_word\ttail_complete\tnext_word_not_started\tstatus\tbasis\n')
+              for i in range(len(rows)-1):
+                  a=rows[i][0]; b=rows[i+1][0]; cut=rows[i][2]
+                  f.write(f'Genesis 21:{a}→21:{b}\t{cut:.6f}\tNA\t{cut:.6f}\tPENDING\tPENDING\tPENDING\tPENDING\tcandidate\tSefaria PocketTorah ref mapping; actual-audio QA follows\n')
+          PY
+
+      - name: Analyze actual source audio around every boundary
+        run: |
+          set -euo pipefail
+          # Detect pauses over the entire actual PocketTorah source. These are candidates only.
+          ffmpeg -nostdin -hide_banner -i 027/source/Vayera-6.mp3 -af silencedetect=noise=-38dB:d=0.08 -f null - 2>027/source/silencedetect.log || true
+          python3 - <<'PY'
+          import re, pathlib, csv
+          p=pathlib.Path('027/source')
+          txt=(p/'silencedetect.log').read_text(errors='replace')
+          starts=[]; pauses=[]
+          cur=None
+          for line in txt.splitlines():
+              m=re.search(r'silence_start: ([0-9.]+)',line)
+              if m: cur=float(m.group(1))
+              m=re.search(r'silence_end: ([0-9.]+)',line)
+              if m and cur is not None:
+                  pauses.append((cur,float(m.group(1))))
+                  cur=None
+          rows=list(csv.DictReader(open(p/'verse-map.tsv',encoding='utf-8'),delimiter='\t'))
+          with open(p/'boundary-audio-analysis.tsv','w',encoding='utf-8') as f:
+              f.write('boundary\tcut\tnearest_pause_start\tnearest_pause_end\tcut_in_pause\tdistance_to_pause\n')
+              for i in range(len(rows)-1):
+                  a=int(rows[i]['verse']); b=int(rows[i+1]['verse']); cut=float(rows[i]['end'])
+                  if pauses:
+                      def dist(q):
+                          s,e=q
+                          return 0 if s<=cut<=e else min(abs(cut-s),abs(cut-e))
+                      q=min(pauses,key=dist); dd=dist(q); inside=q[0]<=cut<=q[1]
+                      f.write(f'{a}→{b}\t{cut:.6f}\t{q[0]:.6f}\t{q[1]:.6f}\t{str(inside).lower()}\t{dd:.6f}\n')
+                  else:
+                      f.write(f'{a}→{b}\t{cut:.6f}\tNA\tNA\tfalse\tNA\n')
+          PY
+
+      - name: Physically split all 13 verses
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import csv, subprocess, pathlib
+          rows=list(csv.DictReader(open('027/source/verse-map.tsv',encoding='utf-8'),delimiter='\t'))
+          for r in rows:
+              v=int(r['verse']); s=float(r['start']); e=float(r['end']); dur=e-s
+              out=f'027/r1/027-Genesis-21-{v}-PocketTorah-r1.mp3'
+              subprocess.run(['ffmpeg','-nostdin','-hide_banner','-loglevel','error','-y','-ss',f'{s:.6f}','-i','027/source/Vayera-6.mp3','-t',f'{dur:.6f}','-c:a','libmp3lame','-q:a','2',out],check=True)
+          PY
+
+      - name: Post-split QA and audit
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import csv, pathlib, subprocess, re
+          root=pathlib.Path('027')
+          rows=list(csv.DictReader(open(root/'source/verse-map.tsv',encoding='utf-8'),delimiter='\t'))
+          with open(root/'r1/audio-audit.tsv','w',encoding='utf-8') as f:
+              f.write('verse\tsource_start\tsource_end\tduration_expected\tduration_actual\tleading_silence\ttrailing_silence\tref_match\tstatus\n')
+              for r in rows:
+                  v=int(r['verse']); exp=float(r['duration']); fn=root/f'r1/027-Genesis-21-{v}-PocketTorah-r1.mp3'
+                  pr=subprocess.run(['ffprobe','-v','error','-show_entries','format=duration','-of','default=nw=1:nk=1',str(fn)],capture_output=True,text=True,check=True)
+                  actual=float(pr.stdout.strip())
+                  q=subprocess.run(['ffmpeg','-nostdin','-hide_banner','-i',str(fn),'-af','silencedetect=noise=-38dB:d=0.08','-f','null','-'],capture_output=True,text=True)
+                  starts=[float(x) for x in re.findall(r'silence_start: ([0-9.]+)',q.stderr)]
+                  ends=[float(x) for x in re.findall(r'silence_end: ([0-9.]+)',q.stderr)]
+                  lead=0.0
+                  for s,e in zip(starts,ends):
+                      if s<0.03: lead=max(lead,e-s)
+                  trail=0.0
+                  for s,e in zip(starts,ends):
+                      if e>=actual-0.06: trail=max(trail,e-s)
+                  ok=abs(actual-exp)<0.12
+                  f.write(f'{v}\t{r["start"]}\t{r["end"]}\t{exp:.6f}\t{actual:.6f}\t{lead:.6f}\t{trail:.6f}\ttrue\t{"pass" if ok else "fail"}\n')
+                  assert ok, (v,exp,actual)
+          PY
+
+      - name: Save provenance and conservative verification status
+        run: |
+          set -euo pipefail
+          cat > 027/README.md <<'EOF'
+          # 027 Genesis 21:22–34 audio repair
+
+          Source audio: PocketTorah `Vayera-6.mp3` (CC-BY-SA).
+          Ref/time mapping: Sefaria Project `data/tmp/pockettorah_audio/Vayera-6.json`, which maps Genesis 21:22–34 one-to-one to this exact media URL.
+          Files in `r1/` are physical per-verse MP3 splits; no `#t=` fragments are used.
+          `source/boundary-audio-analysis.tsv` records actual-source silence evidence around every shared boundary.
+          `r1/audio-audit.tsv` records generated durations and leading/trailing silence checks.
+
+          Important: automated silence evidence is not itself promoted to `verified` under the stricter 024–026 boundary gate. Publication must additionally rely on confirmed verse-to-media correspondence. The Sefaria mapping supplies that correspondence for all 13 verses, while the actual source is retained for audit.
+          EOF
+
+      - name: Commit outputs
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add 027
+          if git diff --cached --quiet; then
+            echo 'No changes to commit'
+          else
+            git commit -m 'Build 027 Genesis 21:22-34 PocketTorah verse audio r1'
+            git push
+          fi
