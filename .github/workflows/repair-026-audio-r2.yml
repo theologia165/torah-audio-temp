@@ -1,0 +1,119 @@
+name: Repair 026 audio r2 full audit
+
+on:
+  push:
+    paths:
+      - '.github/workflows/repair-026-audio-r2.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    if: ${{ !contains(github.event.head_commit.message, '[repair-026-r2]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Download source and derive conservative shared boundaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg curl
+          cd 026
+          curl -L --fail --silent --show-error -o Vayera-5.mp3 https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/audio/Vayera-5.mp3
+          curl -L --fail --silent --show-error -o Vayera-5.txt https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/torah/labels/Vayera-5.txt
+          for th in 38 34 30 26 22 20; do
+            ffmpeg -hide_banner -nostdin -i Vayera-5.mp3 -af silencedetect=noise=-${th}dB:d=0.04 -f null - 2> /tmp/s${th}.log || true
+          done
+          python3 - <<'PY'
+          import re,csv,pathlib,subprocess
+          root=pathlib.Path('.')
+          rows=list(csv.DictReader((root/'boundaries.tsv').open(),delimiter='\t'))
+          refs=[r['reference'] for r in rows]
+          counts=[int(r['pockettorah_tokens']) for r in rows]
+          labels=[float(x) for x in (root/'Vayera-5.txt').read_text().strip().split(',') if x.strip()]
+          first=[]; i=0
+          for c in counts:
+              first.append(i); i+=c
+          P={}
+          for th in [38,34,30,26,22,20]:
+              txt=pathlib.Path(f'/tmp/s{th}.log').read_text(errors='ignore')
+              ss=[float(x) for x in re.findall(r'silence_start: ([0-9.]+)',txt)]
+              ee=[float(x) for x in re.findall(r'silence_end: ([0-9.]+)',txt)]
+              P[th]=[(s,e,e-s) for s,e in zip(ss,ee) if e>s]
+          total=float(subprocess.check_output(['ffprobe','-v','error','-show_entries','format=duration','-of','default=nw=1:nk=1','Vayera-5.mp3'],text=True).strip())
+          cuts=[0.0]
+          audit=['boundary\tlabel_next\tpause_start\tpause_end\tthreshold\tadopted_cut\tdelta_from_label\tstatus']
+          prev=0.0
+          for k in range(len(refs)-1):
+              lab=labels[first[k+1]]
+              choice=None; used=None
+              # Prefer a real pause that straddles or immediately precedes the next-word label.
+              # Use the LATE side of the pause (end - 35 ms), never its midpoint, to preserve the previous word tail.
+              for th,min_d,window in [(38,.10,1.8),(34,.10,2.0),(30,.09,2.2),(26,.08,2.4),(22,.07,2.6),(20,.06,2.8)]:
+                  cand=[]
+                  for s,e,d in P[th]:
+                      cut=e-0.035
+                      if cut <= prev+0.55: continue
+                      if lab-window <= cut <= lab+window and d>=min_d:
+                          # Prefer pauses whose end lies nearest the next-word label, with a bias to cuts at/just before it.
+                          score=abs(e-lab) + (0.25 if e>lab+0.35 else 0)
+                          cand.append((score,s,e,d,cut))
+                  if cand:
+                      _,s,e,d,cut=min(cand,key=lambda x:x[0]); choice=(s,e,d,cut); used=th; break
+              if choice is None:
+                  raise SystemExit(f'No defensible pause candidate for {refs[k]}->{refs[k+1]} near label {lab}')
+              s,e,d,cut=choice
+              if cut <= prev:
+                  raise SystemExit('non-monotonic cut')
+              cuts.append(cut); prev=cut
+              audit.append(f'{refs[k]}->{refs[k+1]}\t{lab:.6f}\t{s:.6f}\t{e:.6f}\t-{used}dB\t{cut:.6f}\t{cut-lab:+.3f}\tcandidate-late-pause')
+          cuts.append(total)
+          # sanity: each span must be positive and not absurdly short
+          for a,b,r in zip(cuts,cuts[1:],refs):
+              if b-a < 2.0: raise SystemExit(f'implausibly short span {r}: {b-a}')
+          out=['reference\tstart\tend\tpockettorah_tokens\tboundary_basis']
+          for k,r in enumerate(refs):
+              basis='source start' if k==0 else 'previous shared boundary'
+              if k < len(refs)-1: basis += '; late side of detected inter-verse pause'
+              else: basis += '; end of source'
+              out.append(f'{r}\t{cuts[k]:.6f}\t{cuts[k+1]:.6f}\t{counts[k]}\t{basis}')
+          (root/'boundaries-r2.tsv').write_text('\n'.join(out)+'\n')
+          (root/'boundary-audit-r2.tsv').write_text('\n'.join(audit)+'\n')
+          PY
+      - name: Build normal and study MP3s from shared boundaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd 026
+          mkdir -p audio
+          tail -n +2 boundaries-r2.tsv | while IFS=$'\t' read -r ref start end tok basis; do
+            chap=${ref#Genesis-}; ch=${chap%-*}; v=${chap#*-}
+            base="026-Genesis-${ch}-${v}-r2"
+            dur=$(python3 - <<PY
+          print(float('$end')-float('$start'))
+          PY
+          )
+            ffmpeg -hide_banner -loglevel error -nostdin -y -ss "$start" -t "$dur" -i Vayera-5.mp3 -codec:a libmp3lame -q:a 2 "audio/${base}-normal.mp3"
+            ffmpeg -hide_banner -loglevel error -nostdin -y -i "audio/${base}-normal.mp3" -filter:a 'atempo=0.673028' -codec:a libmp3lame -q:a 2 "audio/${base}-study.mp3"
+          done
+          # mechanical audit: count, starts at 0 as standalone files, no leading silence >=0.45s
+          n=$(find audio -name '026-Genesis-21-*-r2-study.mp3' | wc -l)
+          test "$n" -eq 17
+          : > audio-audit-r2.tsv
+          printf 'file\tduration\tleading_silence_ge_0.45\n' >> audio-audit-r2.tsv
+          for f in audio/026-Genesis-21-*-r2-study.mp3; do
+            d=$(ffprobe -v error -show_entries format=duration -of default=nw=1:nk=1 "$f")
+            lead=$(ffmpeg -hide_banner -nostdin -i "$f" -af silencedetect=noise=-38dB:d=0.45 -f null - 2>&1 | awk '/silence_start: 0(\.0*)?/{x=1} END{print x?"YES":"NO"}')
+            printf '%s\t%s\t%s\n' "$f" "$d" "$lead" >> audio-audit-r2.tsv
+          done
+      - name: Commit repaired audio and audit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add 026/boundaries-r2.tsv 026/boundary-audit-r2.tsv 026/audio-audit-r2.tsv 026/audio/*-r2-normal.mp3 026/audio/*-r2-study.mp3
+          git commit -m '[repair-026-r2] Recut 026 audio using late verified-pause candidates' || exit 0
+          git push
