@@ -1,0 +1,54 @@
+Genesis 19 / 024 r6 repair
+v4 end fixed from user-confirmed r5: 67.939450
+initial label-to-source offset=4.814408s
+strong pause=-38dB/0.18s; soft fallback=-30dB/0.07s
+
+after v05: soft-near next_label=75.979144 expected=80.793552 pause=80.545500-82.369000 dur=1.823 cut=81.457250 offset=4.814408->5.478106
+after v06: strong-near next_label=85.816046 expected=91.294152 pause=90.400300-90.642100 dur=0.242 cut=90.521200 offset=5.478106->4.705154
+after v07: strong-near next_label=89.742540 expected=94.447694 pause=94.294900-94.554800 dur=0.260 cut=94.424850 offset=4.705154->4.682310
+after v08: strong-near next_label=111.992677 expected=116.674987 pause=116.986000-117.312000 dur=0.326 cut=117.149000 offset=4.682310->5.156323
+after v09: strong-near next_label=130.509198 expected=135.665521 pause=135.538000-135.770000 dur=0.232 cut=135.654000 offset=5.156323->5.144802
+after v10: soft-near next_label=142.825991 expected=147.970793 pause=147.316000-147.973000 dur=0.657 cut=147.644500 offset=5.144802->4.818509
+after v11: strong-near next_label=154.419482 expected=159.237991 pause=158.996000-159.276000 dur=0.280 cut=159.136000 offset=4.818509->4.716518
+after v12: soft-near next_label=168.451533 expected=173.168051 pause=172.961000-173.722000 dur=0.761 cut=173.341500 offset=4.716518->4.889967
+after v13: strong-near next_label=179.342388 expected=184.232355 pause=183.915000-184.338000 dur=0.423 cut=184.126500 offset=4.889967->4.784112
+after v14: soft-near next_label=197.052944 expected=201.837056 pause=201.626000-202.291000 dur=0.665 cut=201.958500 offset=4.784112->4.905556
+after v15: soft-near next_label=211.952957 expected=216.858513 pause=216.543000-217.231000 dur=0.688 cut=216.887000 offset=4.905556->4.934043
+after v16: strong-near next_label=231.254776 expected=236.188819 pause=235.938000-236.145000 dur=0.207 cut=236.041500 offset=4.934043->4.786724
+after v17: strong-near next_label=248.944666 expected=253.731390 pause=254.265000-254.453000 dur=0.188 cut=254.359000 offset=4.786724->5.414334
+after v18: strong-near next_label=253.222479 expected=258.636813 pause=258.495000-258.882000 dur=0.387 cut=258.688500 offset=5.414334->5.466021
+after v19: strong-near next_label=276.843442 expected=282.309463 pause=281.849000-282.108000 dur=0.259 cut=281.978500 offset=5.466021->5.135058
+v05: source=67.939450-81.457250 normal=13.558s study=18.312s
+v06: source=81.457250-90.521200 normal=9.091s study=12.278s
+v07: source=90.521200-94.424850 normal=3.944s study=5.303s
+v08: source=94.424850-117.149000 normal=22.753s study=30.720s
+v09: source=117.149000-135.654000 normal=18.547s study=25.025s
+v10: source=135.654000-147.644500 normal=12.042s study=16.222s
+v11: source=147.644500-159.136000 normal=11.520s study=15.543s
+v12: source=159.136000-173.341500 normal=14.237s study=19.226s
+v13: source=173.341500-184.126500 normal=10.815s study=14.602s
+v14: source=184.126500-201.958500 normal=17.868s study=24.137s
+v15: source=201.958500-216.887000 normal=14.968s study=20.193s
+v16: source=216.887000-236.041500 normal=19.200s study=25.913s
+v17: source=236.041500-254.359000 normal=18.364s study=24.790s
+v18: source=254.359000-258.688500 normal=4.362s study=5.878s
+v19: source=258.688500-281.978500 normal=23.327s study=31.504s
+v20: source=281.978500-299.494000 normal=17.554s study=23.667s
+
+leading-silence audit
+v05: leading=0.000s
+v06: leading=0.000s
+v07: leading=0.000s
+v08: leading=0.000s
+v09: leading=0.000s
+v10: leading=0.000s
+v11: leading=0.000s
+v12: leading=0.000s
+v13: leading=0.000s
+v14: leading=0.000s
+v15: leading=0.000s
+v16: leading=0.000s
+v17: leading=0.000s
+v18: leading=0.000s
+v19: leading=0.000s
+v20: leading=0.000s
