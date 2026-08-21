@@ -1,0 +1,73 @@
+name: Diagnose 025 audio boundaries
+
+on:
+  push:
+    paths:
+      - '.github/workflows/diagnose-025-boundaries.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  diagnose:
+    if: ${{ !contains(github.event.head_commit.message, '[diag-025]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Diagnose source pauses near 025 verse boundaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg curl
+          cd 025
+          curl -L --fail --silent --show-error -o Vayera-4.mp3 https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/audio/Vayera-4.mp3
+          curl -L --fail --silent --show-error -o Vayera-4.txt https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/torah/labels/Vayera-4.txt
+          for th in 20 26 30 34 38 42; do
+            ffmpeg -hide_banner -i Vayera-4.mp3 -af silencedetect=noise=-${th}dB:d=0.05 -f null - 2> /tmp/s${th}.log || true
+          done
+          python3 - <<'PY'
+          import re, pathlib, csv
+          root=pathlib.Path('.')
+          labels=[float(x) for x in (root/'Vayera-4.txt').read_text().strip().split(',') if x.strip()]
+          rows=list(csv.DictReader((root/'boundaries.tsv').open(),delimiter='\t'))
+          counts=[int(r['pockettorah_tokens']) for r in rows]
+          assert sum(counts)==len(labels),(sum(counts),len(labels))
+          first=[]; i=0
+          for c in counts:
+              first.append(i); i+=c
+          sil={}
+          for th in [20,26,30,34,38,42]:
+              txt=pathlib.Path(f'/tmp/s{th}.log').read_text(errors='ignore')
+              ss=[float(x) for x in re.findall(r'silence_start: ([0-9.]+)',txt)]
+              ee=[float(x) for x in re.findall(r'silence_end: ([0-9.]+)',txt)]
+              sil[th]=[(s,e,(s+e)/2,e-s) for s,e in zip(ss,ee) if e>s]
+          out=[]
+          out.append(f'labels={len(labels)} counts={sum(counts)}')
+          out.append('For each boundary, expected is PocketTorah first-word label of next verse. Candidates are measured source silence intervals within ±2.5s.')
+          out.append('')
+          for k in range(min(12,len(rows)-1)):
+              ref=rows[k]['reference']
+              nxt=rows[k+1]['reference']
+              expected=labels[first[k+1]]
+              old=float(rows[k]['end'])
+              out.append(f'{ref} -> {nxt}: old={old:.6f} next-label={expected:.6f}')
+              for th in [20,26,30,34,38,42]:
+                  c=[x for x in sil[th] if abs(x[2]-expected)<=2.5 and x[3]>=0.05]
+                  c=sorted(c,key=lambda x:(abs(x[2]-expected),-x[3]))[:4]
+                  out.append(f'  -{th}dB: '+(' ; '.join(f'{s:.6f}-{e:.6f} mid={m:.6f} dur={d:.3f} delta={m-expected:+.3f}' for s,e,m,d in c) if c else 'NONE'))
+              out.append('')
+          (root/'diagnose-025-boundaries.log').write_text('\n'.join(out)+'\n')
+          print('\n'.join(out))
+          PY
+      - name: Commit diagnostic
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add 025/diagnose-025-boundaries.log
+          git commit -m '[diag-025] Diagnose 025 source pauses' || exit 0
+          git push
