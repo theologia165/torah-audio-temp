@@ -1,0 +1,79 @@
+name: Candidate 025 measured boundaries
+
+on:
+  push:
+    paths:
+      - '.github/workflows/candidate-025-boundaries.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  candidate:
+    if: ${{ !contains(github.event.head_commit.message, '[cand-025]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Build candidate boundaries without failing
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg curl
+          cd 025
+          curl -L --fail --silent --show-error -o Vayera-4.mp3 https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/audio/Vayera-4.mp3
+          curl -L --fail --silent --show-error -o Vayera-4.txt https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/torah/labels/Vayera-4.txt
+          for th in 34 30 26 20; do ffmpeg -hide_banner -i Vayera-4.mp3 -af silencedetect=noise=-${th}dB:d=0.05 -f null - 2> /tmp/c${th}.log || true; done
+          python3 - <<'PY'
+          import re,pathlib,csv,subprocess
+          root=pathlib.Path('.')
+          rows=list(csv.DictReader((root/'boundaries.tsv').open(),delimiter='\t'))
+          refs=[r['reference'] for r in rows]
+          counts=[int(r['pockettorah_tokens']) for r in rows]
+          labels=[float(x) for x in (root/'Vayera-4.txt').read_text().strip().split(',') if x.strip()]
+          first=[]; i=0
+          for c in counts: first.append(i); i+=c
+          P={}
+          for th in [34,30,26,20]:
+            txt=pathlib.Path(f'/tmp/c{th}.log').read_text(errors='ignore')
+            ss=[float(x) for x in re.findall(r'silence_start: ([0-9.]+)',txt)]
+            ee=[float(x) for x in re.findall(r'silence_end: ([0-9.]+)',txt)]
+            P[th]=[(s,e,(s+e)/2,e-s) for s,e in zip(ss,ee) if e>s]
+          total=float(subprocess.check_output(['ffprobe','-v','error','-show_entries','format=duration','-of','default=nw=1:nk=1','Vayera-4.mp3'],text=True).strip())
+          out=['reference\tlabel_next\tcut\tthreshold\tpause_start\tpause_end\tpause_dur\tdelta\tstatus']
+          prev=0.0
+          cuts=[0.0]
+          for k in range(len(refs)-1):
+            lab=labels[first[k+1]]
+            choice=None; used=''
+            for th,min_d,max_after in [(34,0.18,2.2),(30,0.16,2.4),(26,0.14,2.6),(20,0.10,3.0)]:
+              cand=[x for x in P[th] if x[2]>prev+0.65 and x[2]>=lab+0.03 and x[2]<=lab+max_after and x[3]>=min_d]
+              if cand:
+                strong=[x for x in cand if x[3]>=0.35]
+                choice=min(strong or cand,key=lambda x:x[2]); used=str(th); break
+            status='measured'
+            if choice is None:
+              cand=[x for x in P[20] if x[2]>prev+0.65 and abs(x[2]-lab)<=3.2 and x[3]>=0.06]
+              if cand:
+                choice=min(cand,key=lambda x:abs(x[2]-lab)); used='20'; status='fallback-nearest'
+              else:
+                old=float(rows[k]['end']); choice=(old,old,old,0.0); used='old'; status='NO-CANDIDATE'
+            s,e,mid,d=choice
+            out.append(f'{refs[k]}->{refs[k+1]}\t{lab:.6f}\t{mid:.6f}\t{used}\t{s:.6f}\t{e:.6f}\t{d:.3f}\t{mid-lab:+.3f}\t{status}')
+            cuts.append(mid); prev=mid
+          cuts.append(total)
+          out.append('')
+          out.append('VERSE_SPANS')
+          out.append('reference\tstart\tend\tduration')
+          for k,r in enumerate(refs): out.append(f'{r}\t{cuts[k]:.6f}\t{cuts[k+1]:.6f}\t{cuts[k+1]-cuts[k]:.3f}')
+          (root/'candidate-025-boundaries.tsv').write_text('\n'.join(out)+'\n')
+          PY
+      - name: Commit candidates
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add 025/candidate-025-boundaries.tsv
+          git commit -m '[cand-025] Candidate measured boundaries for 025' || exit 0
+          git push
