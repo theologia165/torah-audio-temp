@@ -1,0 +1,21 @@
+reference	start	end	pockettorah_tokens	last_token_onset	next_verse_onset	boundary_basis
+Genesis-19-1	0.000000	17.618481	16	16.877823	17.644082	preserved after listening check
+Genesis-19-2	17.618481	37.178655	20	36.418356	37.203655	preserved after listening check
+Genesis-19-3	37.178655	48.379496	14	47.433206	48.404496	next-verse first-token onset minus 25 ms
+Genesis-19-4	48.379496	63.100042	15	62.112420	63.125042	next-verse first-token onset minus 25 ms
+Genesis-19-5	63.100042	75.954144	15	75.235177	75.979144	next-verse first-token onset minus 25 ms
+Genesis-19-6	75.954144	85.791046	7	84.886087	85.816046	next-verse first-token onset minus 25 ms
+Genesis-19-7	85.791046	89.717540	5	88.626589	89.742540	next-verse first-token onset minus 25 ms
+Genesis-19-8	89.717540	111.967677	29	111.104050	111.992677	next-verse first-token onset minus 25 ms
+Genesis-19-9	111.967677	130.484198	20	129.641236	130.509198	next-verse first-token onset minus 25 ms
+Genesis-19-10	130.484198	142.800991	12	141.854700	142.825991	next-verse first-token onset minus 25 ms
+Genesis-19-11	142.800991	154.394482	13	153.737512	154.419482	next-verse first-token onset minus 25 ms
+Genesis-19-12	154.394482	168.426533	18	167.728231	168.451533	next-verse first-token onset minus 25 ms
+Genesis-19-13	168.426533	179.317388	15	177.689127	179.342388	next-verse first-token onset minus 25 ms
+Genesis-19-14	179.317388	197.027944	22	196.143651	197.052944	next-verse first-token onset minus 25 ms
+Genesis-19-15	197.027944	211.927957	19	211.456978	211.952957	next-verse first-token onset minus 25 ms
+Genesis-19-16	211.927957	231.229776	16	230.428146	231.254776	next-verse first-token onset minus 25 ms
+Genesis-19-17	231.229776	248.919666	19	247.911378	248.944666	next-verse first-token onset minus 25 ms
+Genesis-19-18	248.919666	253.197479	6	252.292519	253.222479	next-verse first-token onset minus 25 ms
+Genesis-19-19	253.197479	276.818442	23	276.161472	276.843442	next-verse first-token onset minus 25 ms
+Genesis-19-20	276.818442	299.494000	17	292.880071	299.494000	end of source

@@ -1,0 +1,8 @@
+source_duration=299.494000
+labels=321 tokens=321 verses=20
+19:1 and 19:2 preserved; 19:3 onward uses next-verse onset minus 25 ms
+('Genesis 19:3', 47.433206, 48.404496, 48.379496, 'next-verse first-token onset minus 25 ms')
+('Genesis 19:4', 62.11242, 63.125042, 63.100042, 'next-verse first-token onset minus 25 ms')
+('Genesis 19:5', 75.235177, 75.979144, 75.954144, 'next-verse first-token onset minus 25 ms')
+('Genesis 19:6', 84.886087, 85.816046, 85.791046, 'next-verse first-token onset minus 25 ms')
+PASS: all 19 boundaries lie after the previous final-token onset and before the next first-token onset
