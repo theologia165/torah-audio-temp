@@ -130,3 +130,4 @@ print("last three corrected boundaries:")
 for r in rows[-3:]: print(r)
 print("PASS: every shared boundary is after the previous verse's final-token onset and before the next verse's first-token onset")
 # trigger-r2
+# rerun requested 2026-08-21
