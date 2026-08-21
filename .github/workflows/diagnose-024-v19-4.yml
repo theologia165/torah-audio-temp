@@ -1,0 +1,41 @@
+name: Diagnose 024 Genesis 19-4 source
+on:
+  push:
+    paths:
+      - '.github/workflows/diagnose-024-v19-4.yml'
+permissions:
+  contents: write
+jobs:
+  diagnose:
+    if: ${{ !contains(github.event.head_commit.message, '[diag-024-v4]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect source and current clips
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+          curl -L -sS https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/audio/Vayera-3.mp3 -o /tmp/src.mp3
+          {
+            echo '024 Genesis 19:4 diagnostic'
+            echo 'SOURCE duration:'
+            ffprobe -v error -show_entries format=duration -of default=nw=1:nk=1 /tmp/src.mp3
+            echo
+            echo 'SOURCE silences 34-72 sec (timestamps are relative to 34 sec excerpt):'
+            ffmpeg -hide_banner -loglevel info -ss 34 -to 72 -i /tmp/src.mp3 -af silencedetect=noise=-35dB:d=0.12 -f null - 2>&1 | grep -E 'silence_(start|end)' || true
+            echo
+            for f in 024/audio/024-Genesis-19-3-r3-study.mp3 024/audio/024-Genesis-19-4-r4-study.mp3 024/audio-normal/024-Genesis-19-4-r4.mp3; do
+              echo "FILE $f"
+              ffprobe -v error -show_entries format=duration -of default=nw=1:nk=1 "$f" || true
+              ffmpeg -hide_banner -loglevel info -i "$f" -af silencedetect=noise=-35dB:d=0.12 -f null - 2>&1 | grep -E 'silence_(start|end)' || true
+              echo
+            done
+          } > 024/diagnose-19-4.txt
+      - name: Commit report
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add 024/diagnose-19-4.txt
+          git commit -m '[diag-024-v4] Diagnose Genesis 19:4 source silence' || exit 0
+          git push
