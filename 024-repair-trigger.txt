@@ -1,0 +1,2 @@
+trigger r6 measured-pause rebuild for Genesis 19:5-20
+retry with soft-pause fallback
