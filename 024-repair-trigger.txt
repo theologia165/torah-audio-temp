@@ -1,0 +1,1 @@
+Repair requested 2026-08-21: rebuild Genesis 19:1-20 audio boundaries from concatenated source clips and cut only at detected pauses.
