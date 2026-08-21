@@ -1,0 +1,17 @@
+boundary	label_next	pause_start	pause_end	threshold	adopted_cut	delta_from_label	status
+Genesis-21-5->Genesis-21-6	5.619229	5.915440	6.042130	-38dB	6.007130	+0.388	candidate-late-pause
+Genesis-21-6->Genesis-21-7	12.770975	13.098600	13.198600	-38dB	13.163600	+0.393	candidate-late-pause
+Genesis-21-7->Genesis-21-8	22.593016	22.810900	23.061100	-38dB	23.026100	+0.433	candidate-late-pause
+Genesis-21-8->Genesis-21-9	31.114739	31.371300	31.479300	-38dB	31.444300	+0.330	candidate-late-pause
+Genesis-21-9->Genesis-21-10	40.054422	40.271500	40.609000	-38dB	40.574000	+0.520	candidate-late-pause
+Genesis-21-10->Genesis-21-11	51.385760	51.618500	52.083000	-38dB	52.048000	+0.662	candidate-late-pause
+Genesis-21-11->Genesis-21-12	58.514286	58.924100	59.100600	-38dB	59.065600	+0.551	candidate-late-pause
+Genesis-21-12->Genesis-21-13	77.670748	77.854300	78.010400	-38dB	77.975400	+0.305	candidate-late-pause
+Genesis-21-13->Genesis-21-14	83.963356	84.175400	84.417500	-38dB	84.382500	+0.419	candidate-late-pause
+Genesis-21-14->Genesis-21-15	111.711202	111.786000	112.302000	-34dB	112.267000	+0.556	candidate-late-pause
+Genesis-21-15->Genesis-21-16	118.561088	118.674000	119.416000	-34dB	119.381000	+0.820	candidate-late-pause
+Genesis-21-16->Genesis-21-17	136.394014	136.340000	136.446000	-34dB	136.411000	+0.017	candidate-late-pause
+Genesis-21-17->Genesis-21-18	157.785437	157.915000	158.529000	-34dB	158.494000	+0.709	candidate-late-pause
+Genesis-21-18->Genesis-21-19	165.239042	165.431000	165.927000	-34dB	165.892000	+0.653	candidate-late-pause
+Genesis-21-19->Genesis-21-20	177.383078	177.613000	178.250000	-34dB	178.215000	+0.832	candidate-late-pause
+Genesis-21-20->Genesis-21-21	186.740720	186.826000	187.551000	-34dB	187.516000	+0.775	candidate-late-pause
