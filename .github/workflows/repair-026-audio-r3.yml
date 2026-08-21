@@ -1,0 +1,91 @@
+name: Repair 026 audio r3 refine shared boundaries
+on:
+  push:
+    paths:
+      - '.github/workflows/repair-026-audio-r3.yml'
+permissions:
+  contents: write
+jobs:
+  repair:
+    if: ${{ !contains(github.event.head_commit.message, '[repair-026-r3]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Refine r2 boundaries using actual leading silence of next verse
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg curl
+          cd 026
+          curl -L --fail --silent --show-error -o Vayera-5.mp3 https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/audio/Vayera-5.mp3
+          python3 - <<'PY'
+          import csv,subprocess,re,pathlib
+          rows=list(csv.DictReader(open('boundaries-r2.tsv'),delimiter='\t'))
+          refs=[r['reference'] for r in rows]
+          counts=[int(r['pockettorah_tokens']) for r in rows]
+          cuts=[float(rows[0]['start'])]+[float(r['end']) for r in rows]
+          log=['boundary\tr2_cut\tleading_silence_source\tr3_cut\tstatus']
+          # For each shared boundary, inspect the NEXT verse beginning at the cut.
+          # If the next verse begins with a real silence, move the shared boundary to 35ms before speech resumes.
+          for i in range(1,len(cuts)-1):
+              cut=cuts[i]
+              cmd=['ffmpeg','-hide_banner','-nostdin','-ss',f'{cut:.6f}','-t','2.5','-i','Vayera-5.mp3','-af','silencedetect=noise=-38dB:d=0.08','-f','null','-']
+              p=subprocess.run(cmd,stdout=subprocess.DEVNULL,stderr=subprocess.PIPE,text=True)
+              txt=p.stderr
+              # accept only silence that truly starts at segment origin (allow encoder/seek tolerance <=50ms)
+              mstart=re.search(r'silence_start: ([0-9.]+)',txt)
+              mend=re.search(r'silence_end: ([0-9.]+)',txt)
+              lead=0.0; new=cut; status='keep-r2'
+              if mstart and mend:
+                  s=float(mstart.group(1)); e=float(mend.group(1))
+                  if s<=0.05 and e>=0.10:
+                      lead=e
+                      new=cut+e-0.035
+                      # never move past 1.5s; if so require manual review
+                      if new-cut>1.5: raise SystemExit(f'excessive leading silence shift {refs[i]}: {new-cut}')
+                      cuts[i]=new; status='shift-to-speech-onset-minus-35ms'
+              log.append(f'{refs[i-1]}->{refs[i]}\t{cut:.6f}\t{lead:.6f}\t{cuts[i]:.6f}\t{status}')
+          # monotonicity and min span
+          for i in range(len(cuts)-1):
+              if cuts[i+1]-cuts[i] < 2.0: raise SystemExit(f'bad span {refs[i]}')
+          out=['reference\tstart\tend\tpockettorah_tokens\tboundary_basis']
+          for i,r in enumerate(refs):
+              basis='source start' if i==0 else 'previous shared boundary r3'
+              if i<len(refs)-1: basis += '; r2 late-pause refined by next-verse speech onset'
+              else: basis += '; end of source'
+              out.append(f'{r}\t{cuts[i]:.6f}\t{cuts[i+1]:.6f}\t{counts[i]}\t{basis}')
+          pathlib.Path('boundaries-r3.tsv').write_text('\n'.join(out)+'\n')
+          pathlib.Path('boundary-audit-r3.tsv').write_text('\n'.join(log)+'\n')
+          PY
+      - name: Build r3 normal/study files and audit
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd 026; mkdir -p audio
+          tail -n +2 boundaries-r3.tsv | while IFS=$'\t' read -r ref start end tok basis; do
+            chap=${ref#Genesis-}; ch=${chap%-*}; v=${chap#*-}; base="026-Genesis-${ch}-${v}-r3"
+            dur=$(python3 - <<PY
+          print(float('$end')-float('$start'))
+          PY
+          )
+            ffmpeg -hide_banner -loglevel error -nostdin -y -ss "$start" -t "$dur" -i Vayera-5.mp3 -codec:a libmp3lame -q:a 2 "audio/${base}-normal.mp3"
+            ffmpeg -hide_banner -loglevel error -nostdin -y -i "audio/${base}-normal.mp3" -filter:a 'atempo=0.673028' -codec:a libmp3lame -q:a 2 "audio/${base}-study.mp3"
+          done
+          n=$(find audio -name '026-Genesis-21-*-r3-study.mp3' | wc -l); test "$n" -eq 17
+          : > audio-audit-r3.tsv; printf 'file\tduration\tleading_silence_ge_0.45\n' >> audio-audit-r3.tsv
+          bad=0
+          for f in audio/026-Genesis-21-*-r3-study.mp3; do
+            d=$(ffprobe -v error -show_entries format=duration -of default=nw=1:nk=1 "$f")
+            lead=$(ffmpeg -hide_banner -nostdin -i "$f" -af silencedetect=noise=-38dB:d=0.45 -f null - 2>&1 | awk '/silence_start: 0(\.0*)?/{x=1} END{print x?"YES":"NO"}')
+            test "$lead" = NO || bad=$((bad+1))
+            printf '%s\t%s\t%s\n' "$f" "$d" "$lead" >> audio-audit-r3.tsv
+          done
+          test "$bad" -eq 0
+      - name: Commit r3
+        run: |
+          git config user.name 'github-actions[bot]'; git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add 026/boundaries-r3.tsv 026/boundary-audit-r3.tsv 026/audio-audit-r3.tsv 026/audio/*-r3-normal.mp3 026/audio/*-r3-study.mp3
+          git commit -m '[repair-026-r3] Refine 026 shared boundaries by next-verse speech onset' || exit 0
+          git push
