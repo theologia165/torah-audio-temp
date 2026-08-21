@@ -1,0 +1,100 @@
+name: Repair 025 audio r3
+
+on:
+  push:
+    paths:
+      - '.github/workflows/repair-025-audio-r3.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    if: ${{ !contains(github.event.head_commit.message, '[audio-025-r3]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Rebuild 025 from post-label measured pauses
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg curl
+          cd 025
+          curl -L --fail --silent --show-error -o Vayera-4.mp3 https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/audio/Vayera-4.mp3
+          curl -L --fail --silent --show-error -o Vayera-4.txt https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/torah/labels/Vayera-4.txt
+          mkdir -p audio audio-normal
+          for th in 34 30 26 20; do
+            ffmpeg -hide_banner -i Vayera-4.mp3 -af silencedetect=noise=-${th}dB:d=0.05 -f null - 2> /tmp/r3-${th}.log || true
+          done
+          python3 - <<'PY'
+          import re, pathlib, subprocess, csv
+          root=pathlib.Path('.')
+          src=root/'Vayera-4.mp3'
+          labels=[float(x) for x in (root/'Vayera-4.txt').read_text().strip().split(',') if x.strip()]
+          rows=list(csv.DictReader((root/'boundaries.tsv').open(),delimiter='\t'))
+          refs=[r['reference'] for r in rows]
+          counts=[int(r['pockettorah_tokens']) for r in rows]
+          assert sum(counts)==len(labels)==570
+          first=[]; n=0
+          for c in counts:
+              first.append(n); n+=c
+          def pauses(th):
+              txt=pathlib.Path(f'/tmp/r3-{th}.log').read_text(errors='ignore')
+              ss=[float(x) for x in re.findall(r'silence_start: ([0-9.]+)',txt)]
+              ee=[float(x) for x in re.findall(r'silence_end: ([0-9.]+)',txt)]
+              return [(s,e,(s+e)/2,e-s) for s,e in zip(ss,ee) if e>s]
+          P={th:pauses(th) for th in [34,30,26,20]}
+          def duration(p):
+              return float(subprocess.check_output(['ffprobe','-v','error','-show_entries','format=duration','-of','default=nw=1:nk=1',str(p)],text=True).strip())
+          total=duration(src)
+          cuts=[0.0]
+          report=['025 r3: actual source-pause boundaries','Rule: label is search guide only; reject pre-label low-volume dips that clipped tails in the old files.','']
+          prev=0.0
+          for k in range(len(refs)-1):
+              label=labels[first[k+1]]
+              chosen=None; used=None
+              # Verse-boundary pause should occur at/after the nominal next-verse marker once the observed source offset is considered.
+              for th,min_d,max_after in [(34,0.18,2.2),(30,0.18,2.3),(26,0.16,2.5),(20,0.14,2.7)]:
+                  cand=[x for x in P[th] if x[2]>prev+0.70 and x[2]>=label+0.05 and x[2]<=label+max_after and x[3]>=min_d]
+                  if not cand:
+                      continue
+                  # Prefer substantial pauses; among them choose the earliest plausible boundary after the label.
+                  strong=[x for x in cand if x[3]>=0.35]
+                  chosen=min(strong or cand,key=lambda x:x[2])
+                  used=th
+                  break
+              if chosen is None:
+                  # Last-resort short breathing/volume valley, still post-label.
+                  cand=[x for x in P[20] if x[2]>prev+0.70 and x[2]>=label and x[2]<=label+3.0 and x[3]>=0.08]
+                  if not cand:
+                      raise RuntimeError(f'No plausible post-label pause: {refs[k]} -> {refs[k+1]} label={label:.3f}')
+                  chosen=min(cand,key=lambda x:x[2]); used=20
+              s,e,mid,sdur=chosen
+              cuts.append(mid); prev=mid
+              report.append(f'{refs[k]} -> {refs[k+1]} label={label:.6f} th=-{used} pause={s:.6f}-{e:.6f} dur={sdur:.3f} cut={mid:.6f} delta={mid-label:+.3f}')
+          cuts.append(total)
+          assert len(cuts)==len(refs)+1
+          ATEMPO=0.692086
+          for k,ref in enumerate(refs):
+              start,end=cuts[k],cuts[k+1]
+              if end-start<1.0: raise RuntimeError(f'short verse {ref}: {end-start}')
+              normal=root/'audio-normal'/f'025-{ref}-r3.mp3'
+              study=root/'audio'/f'025-{ref}-r3-study.mp3'
+              subprocess.run(['ffmpeg','-nostdin','-y','-hide_banner','-loglevel','error','-ss',f'{start:.6f}','-to',f'{end:.6f}','-i',str(src),'-vn','-ac','1','-codec:a','libmp3lame','-q:a','3',str(normal)],check=True)
+              subprocess.run(['ffmpeg','-nostdin','-y','-hide_banner','-loglevel','error','-i',str(normal),'-filter:a',f'atempo={ATEMPO:.6f}','-codec:a','libmp3lame','-q:a','3',str(study)],check=True)
+              report.append(f'{ref} source={start:.6f}-{end:.6f} normal={duration(normal):.3f} study={duration(study):.3f}')
+          (root/'repair-025-r3.log').write_text('\n'.join(report)+'\n')
+          print('\n'.join(report))
+          PY
+      - name: Commit r3 files
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add 025/audio/*-r3-study.mp3 025/audio-normal/*-r3.mp3 025/repair-025-r3.log
+          git commit -m '[audio-025-r3] Rebuild 025 with measured post-label pauses'
+          git push
