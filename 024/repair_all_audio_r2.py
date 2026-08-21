@@ -109,7 +109,8 @@ with (ROOT/"boundaries-r2.tsv").open("w",encoding="utf-8") as f:
             lo = labels[first_idx[vi]+counts[vi]-1]
             no = src_dur
             basis = "end of source"
-        f.write(f"{v['ref'].replace(' ','-')}\t{cuts[vi]:.6f}\t{cuts[vi+1]:.6f}\t{counts[vi]}\t{lo:.6f}\t{no:.6f}\t{basis}\n")
+        ref_key = v['ref'].replace(' ','-').replace(':','-')
+        f.write(f"{ref_key}\t{cuts[vi]:.6f}\t{cuts[vi+1]:.6f}\t{counts[vi]}\t{lo:.6f}\t{no:.6f}\t{basis}\n")
 
 with (ROOT/"boundary-repair-r2.tsv").open("w",encoding="utf-8") as f:
     f.write("reference\tlast_token_onset\tnext_verse_onset\tnew_cut\told_cut_if_known\n")
