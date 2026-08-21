@@ -57,7 +57,6 @@ def choose_boundary(last_onset, next_onset):
     cut = max(last_onset + span*0.80, next_onset-0.025)
     return cut, f"fallback next-verse onset minus 25ms; last-token onset {last_onset:.6f}; next-verse onset {next_onset:.6f}"
 
-
 verses = json.loads(TOKENS.read_text(encoding="utf-8"))
 labels = [float(x) for x in LABELS.read_text(encoding="utf-8").strip().split(",") if x.strip()]
 counts = [len(v["words"]) for v in verses]
@@ -132,3 +131,4 @@ for r in rows[-3:]: print(r)
 print("PASS: every shared boundary is after the previous verse's final-token onset and before the next verse's first-token onset")
 # trigger-r2
 # rerun requested 2026-08-21
+# trigger via merged PR for write-back workflow
