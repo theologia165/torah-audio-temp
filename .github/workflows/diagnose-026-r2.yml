@@ -1,0 +1,41 @@
+name: Diagnose 026 r2 boundaries
+on:
+  push:
+    paths:
+      - '.github/workflows/diagnose-026-r2.yml'
+permissions:
+  contents: write
+jobs:
+  diag:
+    if: ${{ !contains(github.event.head_commit.message, '[diag-026-r2]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg curl
+          cd 026
+          curl -L --fail --silent --show-error -o Vayera-5.mp3 https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/audio/Vayera-5.mp3
+          for th in 42 38 34 30 26 22 20 18; do ffmpeg -hide_banner -nostdin -i Vayera-5.mp3 -af silencedetect=noise=-${th}dB:d=0.03 -f null - 2> /tmp/d${th}.log || true; done
+          python3 - <<'PY'
+          import csv,re,pathlib
+          rows=list(csv.DictReader(open('boundaries-r2.tsv'),delimiter='\t'))
+          P={}
+          for th in [42,38,34,30,26,22,20,18]:
+            t=pathlib.Path(f'/tmp/d{th}.log').read_text(errors='ignore')
+            ss=[float(x) for x in re.findall(r'silence_start: ([0-9.]+)',t)]
+            ee=[float(x) for x in re.findall(r'silence_end: ([0-9.]+)',t)]
+            P[th]=list(zip(ss,ee))
+          out=['boundary\tcurrent_cut\tthreshold\tpause_start\tpause_end\tduration\tdelta_end_cut']
+          for i in range(len(rows)-1):
+            cut=float(rows[i]['end']); b=f"{rows[i]['reference']}->{rows[i+1]['reference']}"
+            for th in [42,38,34,30,26,22,20,18]:
+              cand=[(s,e) for s,e in P[th] if s<cut+1.5 and e>cut-1.5]
+              for s,e in cand:
+                out.append(f'{b}\t{cut:.6f}\t-{th}dB\t{s:.6f}\t{e:.6f}\t{e-s:.3f}\t{e-cut:+.3f}')
+          pathlib.Path('diagnose-r2-pauses.tsv').write_text('\n'.join(out)+'\n')
+          PY
+      - run: |
+          git config user.name 'github-actions[bot]'; git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add 026/diagnose-r2-pauses.tsv
+          git commit -m '[diag-026-r2] Save multi-threshold boundary diagnostics' || exit 0
+          git push
