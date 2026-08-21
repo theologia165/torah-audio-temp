@@ -1,0 +1,95 @@
+name: Repair 026 audio r4 broad-pause full recut
+on:
+  push:
+    paths:
+      - '.github/workflows/repair-026-audio-r4.yml'
+permissions:
+  contents: write
+jobs:
+  repair:
+    if: ${{ !contains(github.event.head_commit.message, '[repair-026-r4]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Derive shared boundaries from broad inter-verse pauses
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg curl
+          cd 026
+          curl -L --fail --silent --show-error -o Vayera-5.mp3 https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/audio/Vayera-5.mp3
+          curl -L --fail --silent --show-error -o Vayera-5.txt https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/torah/labels/Vayera-5.txt
+          for th in 34 30 26 22 20 18; do ffmpeg -hide_banner -nostdin -i Vayera-5.mp3 -af silencedetect=noise=-${th}dB:d=0.05 -f null - 2> /tmp/b${th}.log || true; done
+          python3 - <<'PY'
+          import csv,re,pathlib,subprocess
+          rows=list(csv.DictReader(open('boundaries.tsv'),delimiter='\t'))
+          refs=[r['reference'] for r in rows]; counts=[int(r['pockettorah_tokens']) for r in rows]
+          labels=[float(x) for x in pathlib.Path('Vayera-5.txt').read_text().strip().split(',') if x.strip()]
+          first=[]; n=0
+          for c in counts: first.append(n); n+=c
+          P={}
+          for th in [34,30,26,22,20,18]:
+            t=pathlib.Path(f'/tmp/b{th}.log').read_text(errors='ignore')
+            ss=[float(x) for x in re.findall(r'silence_start: ([0-9.]+)',t)]
+            ee=[float(x) for x in re.findall(r'silence_end: ([0-9.]+)',t)]
+            P[th]=[(s,e,e-s) for s,e in zip(ss,ee) if e>s]
+          total=float(subprocess.check_output(['ffprobe','-v','error','-show_entries','format=duration','-of','default=nw=1:nk=1','Vayera-5.mp3'],text=True).strip())
+          cuts=[0.0]; audit=['boundary\tlabel_next\tpause_start\tpause_end\tduration\tthreshold\tcut\tstatus']
+          prev=0.0
+          for i in range(len(refs)-1):
+            lab=labels[first[i+1]]; chosen=None; thused=None
+            # Inter-verse pauses in this source are often broad at -34..-18 dB even when fragmented at -38.
+            # Prefer the broadest pause beginning close to the next-verse label; cut at its late edge.
+            for th,min_d in [(34,.22),(30,.24),(26,.26),(22,.28),(20,.30),(18,.32)]:
+              cand=[x for x in P[th] if x[0]>=lab-0.20 and x[0]<=lab+1.10 and x[1]>prev+0.6 and x[2]>=min_d]
+              if cand:
+                chosen=max(cand,key=lambda x:(x[2],-abs(x[0]-lab))); thused=th; break
+            if chosen is None:
+              # fallback: longest plausible pause whose midpoint is within 1.5 s after the label
+              cand=[]
+              for th in [34,30,26,22,20,18]:
+                for x in P[th]:
+                  mid=(x[0]+x[1])/2
+                  if x[1]>prev+0.6 and lab-0.25<=mid<=lab+1.5 and x[2]>=.10: cand.append((x[2],th,x))
+              if not cand: raise SystemExit(f'no pause {refs[i]}->{refs[i+1]}')
+              _,thused,chosen=max(cand,key=lambda y:y[0])
+            s,e,d=chosen; cut=e-0.035
+            if cut<=prev: raise SystemExit('nonmonotonic')
+            cuts.append(cut); prev=cut
+            audit.append(f'{refs[i]}->{refs[i+1]}\t{lab:.6f}\t{s:.6f}\t{e:.6f}\t{d:.3f}\t-{thused}dB\t{cut:.6f}\tbroad-pause-late-edge')
+          cuts.append(total)
+          for i in range(len(refs)):
+            if cuts[i+1]-cuts[i]<2.0: raise SystemExit(f'short {refs[i]}')
+          out=['reference\tstart\tend\tpockettorah_tokens\tboundary_basis']
+          for i,r in enumerate(refs): out.append(f'{r}\t{cuts[i]:.6f}\t{cuts[i+1]:.6f}\t{counts[i]}\tshared broad-pause late-edge boundary')
+          pathlib.Path('boundaries-r4.tsv').write_text('\n'.join(out)+'\n'); pathlib.Path('boundary-audit-r4.tsv').write_text('\n'.join(audit)+'\n')
+          PY
+      - name: Build and audit
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd 026; mkdir -p audio
+          tail -n +2 boundaries-r4.tsv | while IFS=$'\t' read -r ref start end tok basis; do
+            chap=${ref#Genesis-}; ch=${chap%-*}; v=${chap#*-}; base="026-Genesis-${ch}-${v}-r4"
+            dur=$(python3 - <<PY
+          print(float('$end')-float('$start'))
+          PY
+          )
+            ffmpeg -hide_banner -loglevel error -nostdin -y -ss "$start" -t "$dur" -i Vayera-5.mp3 -codec:a libmp3lame -q:a 2 "audio/${base}-normal.mp3"
+            ffmpeg -hide_banner -loglevel error -nostdin -y -i "audio/${base}-normal.mp3" -filter:a 'atempo=0.673028' -codec:a libmp3lame -q:a 2 "audio/${base}-study.mp3"
+          done
+          n=$(find audio -name '026-Genesis-21-*-r4-study.mp3' | wc -l); test "$n" -eq 17
+          : > audio-audit-r4.tsv; printf 'file\tduration\tleading_silence_ge_0.45\n' >> audio-audit-r4.tsv
+          for f in audio/026-Genesis-21-*-r4-study.mp3; do
+            d=$(ffprobe -v error -show_entries format=duration -of default=nw=1:nk=1 "$f")
+            lead=$(ffmpeg -hide_banner -nostdin -i "$f" -af silencedetect=noise=-38dB:d=0.45 -f null - 2>&1 | awk '/silence_start: 0(\.0*)?/{x=1} END{print x?"YES":"NO"}')
+            printf '%s\t%s\t%s\n' "$f" "$d" "$lead" >> audio-audit-r4.tsv
+          done
+      - name: Commit r4
+        run: |
+          git config user.name 'github-actions[bot]'; git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add 026/boundaries-r4.tsv 026/boundary-audit-r4.tsv 026/audio-audit-r4.tsv 026/audio/*-r4-normal.mp3 026/audio/*-r4-study.mp3
+          git commit -m '[repair-026-r4] Recut all 026 verses at broad-pause late edges' || exit 0
+          git push
