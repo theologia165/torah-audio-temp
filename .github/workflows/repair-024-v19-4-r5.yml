@@ -1,0 +1,45 @@
+name: Repair 024 Genesis 19-4 r5
+on:
+  push:
+    paths:
+      - '.github/workflows/repair-024-v19-4-r5.yml'
+permissions:
+  contents: write
+jobs:
+  repair:
+    if: ${{ !contains(github.event.head_commit.message, '[audio-r5-v4]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Cut v19-4 from measured source silences
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+          curl -L -sS https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/audio/Vayera-3.mp3 -o /tmp/src.mp3
+          # Diagnostic established that the apparent label onset at 48.404 is followed by
+          # a 4.994 s source silence (48.778-53.772). Actual sustained v4 speech begins
+          # after that gap. The next strong verse-boundary silence is 67.634-68.245.
+          START=53.771700
+          END=67.939450
+          mkdir -p 024/audio-normal 024/audio
+          ffmpeg -nostdin -y -hide_banner -loglevel error -ss "$START" -to "$END" -i /tmp/src.mp3 -vn -ac 1 -codec:a libmp3lame -q:a 3 024/audio-normal/024-Genesis-19-4-r5.mp3
+          ffmpeg -nostdin -y -hide_banner -loglevel error -i 024/audio-normal/024-Genesis-19-4-r5.mp3 -filter:a atempo=0.739931 -codec:a libmp3lame -q:a 3 024/audio/024-Genesis-19-4-r5-study.mp3
+          {
+            echo 'Genesis 19:4 r5'
+            echo "source_start=$START"
+            echo "source_end=$END"
+            echo 'start_basis=end of measured 4.994s source silence 48.778-53.772'
+            echo 'end_basis=midpoint of measured strong silence 67.634-68.245'
+            echo -n 'normal_duration='; ffprobe -v error -show_entries format=duration -of default=nw=1:nk=1 024/audio-normal/024-Genesis-19-4-r5.mp3
+            echo -n 'study_duration='; ffprobe -v error -show_entries format=duration -of default=nw=1:nk=1 024/audio/024-Genesis-19-4-r5-study.mp3
+            echo 'study_silences:'
+            ffmpeg -hide_banner -loglevel info -i 024/audio/024-Genesis-19-4-r5-study.mp3 -af silencedetect=noise=-35dB:d=0.4 -f null - 2>&1 | grep -E 'silence_(start|end)' || true
+          } > 024/repair-19-4-r5.txt
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add 024/audio-normal/024-Genesis-19-4-r5.mp3 024/audio/024-Genesis-19-4-r5-study.mp3 024/repair-19-4-r5.txt
+          git commit -m '[audio-r5-v4] Repair Genesis 19:4 from measured silence boundaries' || exit 0
+          git push
