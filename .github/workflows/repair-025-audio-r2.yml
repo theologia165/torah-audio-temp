@@ -1,0 +1,139 @@
+name: Repair 025 audio r2
+
+on:
+  push:
+    paths:
+      - '.github/workflows/repair-025-audio-r2.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    if: ${{ !contains(github.event.head_commit.message, '[audio-025-r2]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Rebuild all 025 verse audio from measured source pauses
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg curl
+          cd 025
+          curl -L --fail --silent --show-error -o Vayera-4.mp3 https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/audio/Vayera-4.mp3
+          curl -L --fail --silent --show-error -o Vayera-4.txt https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/torah/labels/Vayera-4.txt
+          mkdir -p audio audio-normal
+          for th in 34 30 26 20; do
+            ffmpeg -hide_banner -i Vayera-4.mp3 -af silencedetect=noise=-${th}dB:d=0.05 -f null - 2> /tmp/025-s${th}.log || true
+          done
+          python3 - <<'PY'
+          import re, pathlib, subprocess, csv
+          root=pathlib.Path('.')
+          src=root/'Vayera-4.mp3'
+          labels=[float(x) for x in (root/'Vayera-4.txt').read_text().strip().split(',') if x.strip()]
+          old_rows=list(csv.DictReader((root/'boundaries.tsv').open(),delimiter='\t'))
+          counts=[int(r['pockettorah_tokens']) for r in old_rows]
+          assert sum(counts)==len(labels)==570
+          first=[]; i=0
+          for c in counts:
+              first.append(i); i+=c
+
+          def parse(th):
+              txt=pathlib.Path(f'/tmp/025-s{th}.log').read_text(errors='ignore')
+              ss=[float(x) for x in re.findall(r'silence_start: ([0-9.]+)',txt)]
+              ee=[float(x) for x in re.findall(r'silence_end: ([0-9.]+)',txt)]
+              return [(s,e,(s+e)/2,e-s) for s,e in zip(ss,ee) if e>s]
+          sil={th:parse(th) for th in [34,30,26,20]}
+
+          def dur(p):
+              return float(subprocess.check_output(['ffprobe','-v','error','-show_entries','format=duration','-of','default=nw=1:nk=1',str(p)],text=True).strip())
+          total=dur(src)
+          refs=[r['reference'] for r in old_rows]
+          boundaries=[0.0]
+          report=['025 r2 measured-source repair','Labels are search guides only; actual source pauses are final boundary evidence.','']
+
+          # Establish initial offset from boundary after first verse. Old -20dB cut clipped the final word.
+          next_label=labels[first[1]]
+          c=[x for x in sil[34] if abs(x[2]-next_label)<=2.0 and x[3]>=0.20]
+          if not c:
+              c=[x for x in sil[30] if abs(x[2]-next_label)<=2.0 and x[3]>=0.20]
+          if not c:
+              raise RuntimeError('No reliable first measured pause after Genesis 19:21')
+          # Prefer a substantial pause; the old short low-volume dip is not a verse boundary.
+          strong=[x for x in c if x[3]>=0.45]
+          best=min(strong or c,key=lambda x:abs(x[2]-next_label))
+          s,e,mid,sdur=best
+          boundaries.append(mid)
+          offset=mid-next_label
+          report.append(f'{refs[0]} -> {refs[1]}: label={next_label:.6f} pause={s:.6f}-{e:.6f} dur={sdur:.3f} cut={mid:.6f} offset={offset:+.6f}')
+
+          prev=mid
+          for k in range(1,len(refs)-1):
+              next_label=labels[first[k+1]]
+              expected=next_label+offset
+              chosen=None; chosen_th=None
+              for th,min_d,win in [(34,0.14,2.0),(30,0.14,2.3),(26,0.12,2.6),(20,0.10,3.0)]:
+                  cand=[x for x in sil[th] if x[2]>prev+0.75 and abs(x[2]-expected)<=win and x[3]>=min_d]
+                  if not cand:
+                      continue
+                  cand.sort(key=lambda x:(abs(x[2]-expected),-x[3]))
+                  best=cand[0]
+                  strong=[x for x in cand if x[3]>=0.35 and abs(x[2]-expected)<=abs(best[2]-expected)+0.40]
+                  chosen=min(strong,key=lambda x:abs(x[2]-expected)) if strong else best
+                  chosen_th=th
+                  break
+              if chosen is None:
+                  raise RuntimeError(f'No measured pause for {refs[k]} -> {refs[k+1]} expected={expected:.3f}')
+              s,e,mid,sdur=chosen
+              old_offset=offset
+              offset=mid-next_label
+              # Guard against implausible offset jumps signalling an internal pause.
+              if abs(offset-old_offset)>1.25:
+                  raise RuntimeError(f'Offset jump too large at {refs[k]}: {old_offset:.3f}->{offset:.3f}')
+              boundaries.append(mid)
+              report.append(f'{refs[k]} -> {refs[k+1]}: label={next_label:.6f} expected={expected:.6f} th=-{chosen_th} pause={s:.6f}-{e:.6f} dur={sdur:.3f} cut={mid:.6f} offset {old_offset:+.6f}->{offset:+.6f}')
+              prev=mid
+          boundaries.append(total)
+          assert len(boundaries)==len(refs)+1
+
+          ATEMPO=0.692086
+          for k,ref in enumerate(refs):
+              start,end=boundaries[k],boundaries[k+1]
+              if end-start<1.0:
+                  raise RuntimeError(f'Implausibly short {ref}: {end-start:.3f}s')
+              safe=ref.replace('Genesis-','Genesis-')
+              normal=root/'audio-normal'/f'025-{safe}-r2.mp3'
+              study=root/'audio'/f'025-{safe}-r2-study.mp3'
+              subprocess.run(['ffmpeg','-nostdin','-y','-hide_banner','-loglevel','error','-ss',f'{start:.6f}','-to',f'{end:.6f}','-i',str(src),'-vn','-ac','1','-codec:a','libmp3lame','-q:a','3',str(normal)],check=True)
+              subprocess.run(['ffmpeg','-nostdin','-y','-hide_banner','-loglevel','error','-i',str(normal),'-filter:a',f'atempo={ATEMPO:.6f}','-codec:a','libmp3lame','-q:a','3',str(study)],check=True)
+              report.append(f'{ref}: source={start:.6f}-{end:.6f} normal={dur(normal):.3f}s study={dur(study):.3f}s')
+
+          report.append('')
+          report.append('Generated-file leading silence audit (-38dB, 0.18s):')
+          for ref in refs:
+              p=root/'audio'/f'025-{ref}-r2-study.mp3'
+              proc=subprocess.run(['ffmpeg','-hide_banner','-i',str(p),'-af','silencedetect=noise=-38dB:d=0.18','-f','null','-'],stderr=subprocess.PIPE,stdout=subprocess.DEVNULL,text=True)
+              txt=proc.stderr
+              ss=[float(x) for x in re.findall(r'silence_start: ([0-9.]+)',txt)]
+              ee=[float(x) for x in re.findall(r'silence_end: ([0-9.]+)',txt)]
+              lead=ee[0] if ss and ee and ss[0]<=0.08 else 0.0
+              report.append(f'{ref}: leading_silence={lead:.3f}s')
+              if lead>1.20:
+                  raise RuntimeError(f'Long leading silence remains: {ref} {lead:.3f}s')
+
+          (root/'repair-025-r2.log').write_text('\n'.join(report)+'\n',encoding='utf-8')
+          print('\n'.join(report))
+          PY
+      - name: Commit corrected audio
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add 025/audio/*-r2-study.mp3 025/audio-normal/*-r2.mp3 025/repair-025-r2.log
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m '[audio-025-r2] Rebuild 025 from measured source pauses'
+          git push
