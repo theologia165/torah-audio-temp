@@ -1,0 +1,82 @@
+025 r3: actual source-pause boundaries
+Rule: label is search guide only; reject pre-label low-volume dips that clipped tails in the old files.
+
+Genesis-19-21 -> Genesis-19-22 label=12.943298 th=-34 pause=13.129300-14.035100 dur=0.906 cut=13.582200 delta=+0.639
+Genesis-19-22 -> Genesis-19-23 label=25.389194 th=-34 pause=25.542700-26.242800 dur=0.700 cut=25.892750 delta=+0.504
+Genesis-19-23 -> Genesis-19-24 label=30.311824 th=-34 pause=30.420800-31.175100 dur=0.754 cut=30.797950 delta=+0.486
+Genesis-19-24 -> Genesis-19-25 label=41.550283 th=-34 pause=41.749900-42.031000 dur=0.281 cut=41.890450 delta=+0.340
+Genesis-19-25 -> Genesis-19-26 label=51.465203 th=-34 pause=51.709400-52.490600 dur=0.781 cut=52.100000 delta=+0.635
+Genesis-19-26 -> Genesis-19-27 label=57.014772 th=-34 pause=57.019000-58.492900 dur=1.474 cut=57.755950 delta=+0.741
+Genesis-19-27 -> Genesis-19-28 label=65.443616 th=-34 pause=65.562600-66.289400 dur=0.727 cut=65.926000 delta=+0.482
+Genesis-19-28 -> Genesis-19-29 label=80.536586 th=-34 pause=80.733200-81.402000 dur=0.669 cut=81.067600 delta=+0.531
+Genesis-19-29 -> Genesis-19-30 label=96.465475 th=-34 pause=96.652300-97.622400 dur=0.970 cut=97.137350 delta=+0.672
+Genesis-19-30 -> Genesis-19-31 label=113.392822 th=-34 pause=113.379000-113.751000 dur=0.372 cut=113.565000 delta=+0.172
+Genesis-19-31 -> Genesis-19-32 label=125.536858 th=-34 pause=125.644000-126.381000 dur=0.737 cut=126.012500 delta=+0.476
+Genesis-19-32 -> Genesis-19-33 label=135.451779 th=-34 pause=135.535000-138.513000 dur=2.978 cut=137.024000 delta=+1.572
+Genesis-19-33 -> Genesis-19-34 label=151.728967 th=-34 pause=152.124000-152.947000 dur=0.823 cut=152.535500 delta=+0.807
+Genesis-19-34 -> Genesis-19-35 label=170.955090 th=-34 pause=171.103000-171.923000 dur=0.820 cut=171.513000 delta=+0.558
+Genesis-19-35 -> Genesis-19-36 label=186.117720 th=-34 pause=186.362000-187.556000 dur=1.194 cut=186.959000 delta=+0.841
+Genesis-19-36 -> Genesis-19-37 label=191.853049 th=-34 pause=192.030000-193.005000 dur=0.975 cut=192.517500 delta=+0.664
+Genesis-19-37 -> Genesis-19-38 label=200.281892 th=-34 pause=200.322000-200.841000 dur=0.519 cut=200.581500 delta=+0.300
+Genesis-19-38 -> Genesis-20-1 label=210.359353 th=-34 pause=210.716000-211.610000 dur=0.894 cut=211.163000 delta=+0.804
+Genesis-20-1 -> Genesis-20-2 label=222.735589 th=-34 pause=222.987000-223.516000 dur=0.529 cut=223.251500 delta=+0.516
+Genesis-20-2 -> Genesis-20-3 label=236.040623 th=-34 pause=236.225000-236.842000 dur=0.617 cut=236.533500 delta=+0.493
+Genesis-20-3 -> Genesis-20-4 label=250.019035 th=-34 pause=250.216000-250.626000 dur=0.410 cut=250.421000 delta=+0.402
+Genesis-20-4 -> Genesis-20-5 label=260.050056 th=-34 pause=260.202000-261.149000 dur=0.947 cut=260.675500 delta=+0.625
+Genesis-20-5 -> Genesis-20-6 label=272.286972 th=-34 pause=272.373000-272.959000 dur=0.586 cut=272.666000 delta=+0.379
+Genesis-20-6 -> Genesis-20-7 label=293.626110 th=-34 pause=294.001000-294.755000 dur=0.754 cut=294.378000 delta=+0.752
+Genesis-20-7 -> Genesis-20-8 label=309.554999 th=-34 pause=309.655000-310.394000 dur=0.739 cut=310.024500 delta=+0.470
+Genesis-20-8 -> Genesis-20-9 label=323.208332 th=-34 pause=323.717000-324.115000 dur=0.398 cut=323.916000 delta=+0.708
+Genesis-20-9 -> Genesis-20-10 label=346.312187 th=-34 pause=348.048000-348.746000 dur=0.698 cut=348.397000 delta=+2.085
+Genesis-20-10 -> Genesis-20-11 label=353.696133 th=-20 pause=356.104000-356.598000 dur=0.494 cut=356.351000 delta=+2.655
+Genesis-20-11 -> Genesis-20-12 label=363.959353 th=-20 pause=364.651000-364.737000 dur=0.086 cut=364.694000 delta=+0.735
+Genesis-20-12 -> Genesis-20-13 label=373.781394 th=-34 pause=373.945000-374.414000 dur=0.469 cut=374.179500 delta=+0.398
+Genesis-20-13 -> Genesis-20-14 label=397.163888 th=-34 pause=397.364000-397.903000 dur=0.539 cut=397.633500 delta=+0.470
+Genesis-20-14 -> Genesis-20-15 label=409.609784 th=-34 pause=409.875000-411.723000 dur=1.848 cut=410.799000 delta=+1.189
+Genesis-20-15 -> Genesis-20-16 label=417.318809 th=-34 pause=417.654000-419.106000 dur=1.452 cut=418.380000 delta=+1.061
+Genesis-20-16 -> Genesis-20-17 label=433.410237 th=-34 pause=433.580000-434.542000 dur=0.962 cut=434.061000 delta=+0.651
+Genesis-20-17 -> Genesis-20-18 label=445.298854 th=-34 pause=445.440000-446.179000 dur=0.739 cut=445.809500 delta=+0.511
+Genesis-20-18 -> Genesis-21-1 label=454.238536 th=-34 pause=454.412000-456.483000 dur=2.071 cut=455.447500 delta=+1.209
+Genesis-21-1 -> Genesis-21-2 label=465.848514 th=-34 pause=465.971000-466.400000 dur=0.429 cut=466.185500 delta=+0.337
+Genesis-21-2 -> Genesis-21-3 label=477.783570 th=-34 pause=478.230000-478.999000 dur=0.769 cut=478.614500 delta=+0.831
+Genesis-21-3 -> Genesis-21-4 label=486.421394 th=-34 pause=486.645000-487.066000 dur=0.421 cut=486.855500 delta=+0.434
+Genesis-19-21 source=0.000000-13.582200 normal=13.610 study=19.644
+Genesis-19-22 source=13.582200-25.892750 normal=12.356 study=17.816
+Genesis-19-23 source=25.892750-30.797950 normal=4.937 study=7.105
+Genesis-19-24 source=30.797950-41.890450 normal=11.128 study=16.065
+Genesis-19-25 source=41.890450-52.100000 normal=10.240 study=14.785
+Genesis-19-26 source=52.100000-57.755950 normal=5.695 study=8.202
+Genesis-19-27 source=57.755950-65.926000 normal=8.202 study=11.833
+Genesis-19-28 source=65.926000-81.067600 normal=15.177 study=21.917
+Genesis-19-29 source=81.067600-97.137350 normal=16.118 study=23.249
+Genesis-19-30 source=97.137350-113.565000 normal=16.457 study=23.771
+Genesis-19-31 source=113.565000-126.012500 normal=12.487 study=17.998
+Genesis-19-32 source=126.012500-137.024000 normal=11.050 study=15.935
+Genesis-19-33 source=137.024000-152.535500 normal=15.543 study=22.439
+Genesis-19-34 source=152.535500-171.513000 normal=19.017 study=27.429
+Genesis-19-35 source=171.513000-186.959000 normal=15.491 study=22.335
+Genesis-19-36 source=186.959000-192.517500 normal=5.590 study=8.072
+Genesis-19-37 source=192.517500-200.581500 normal=8.098 study=11.677
+Genesis-19-38 source=200.581500-211.163000 normal=10.632 study=15.308
+Genesis-20-1 source=211.163000-223.251500 normal=12.121 study=17.502
+Genesis-20-2 source=223.251500-236.533500 normal=13.322 study=19.200
+Genesis-20-3 source=236.533500-250.421000 normal=13.923 study=20.088
+Genesis-20-4 source=250.421000-260.675500 normal=10.292 study=14.838
+Genesis-20-5 source=260.675500-272.666000 normal=12.042 study=17.345
+Genesis-20-6 source=272.666000-294.378000 normal=21.760 study=31.399
+Genesis-20-7 source=294.378000-310.024500 normal=15.673 study=22.622
+Genesis-20-8 source=310.024500-323.916000 normal=13.923 study=20.088
+Genesis-20-9 source=323.916000-348.397000 normal=24.529 study=35.396
+Genesis-20-10 source=348.397000-356.351000 normal=7.993 study=11.520
+Genesis-20-11 source=356.351000-364.694000 normal=8.385 study=12.069
+Genesis-20-12 source=364.694000-374.179500 normal=9.535 study=13.740
+Genesis-20-13 source=374.179500-397.633500 normal=23.484 study=33.907
+Genesis-20-14 source=397.633500-410.799000 normal=13.192 study=19.043
+Genesis-20-15 source=410.799000-418.380000 normal=7.628 study=10.971
+Genesis-20-16 source=418.380000-434.061000 normal=15.726 study=22.674
+Genesis-20-17 source=434.061000-445.809500 normal=11.781 study=17.006
+Genesis-20-18 source=445.809500-455.447500 normal=9.665 study=13.949
+Genesis-21-1 source=455.447500-466.185500 normal=10.789 study=15.543
+Genesis-21-2 source=466.185500-478.614500 normal=12.460 study=17.972
+Genesis-21-3 source=478.614500-486.855500 normal=8.281 study=11.912
+Genesis-21-4 source=486.855500-497.423750 normal=10.606 study=15.282
