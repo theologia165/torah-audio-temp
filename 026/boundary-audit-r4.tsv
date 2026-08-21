@@ -1,0 +1,17 @@
+boundary	label_next	pause_start	pause_end	duration	threshold	cut	status
+Genesis-21-5->Genesis-21-6	5.619229	5.770140	6.283060	0.513	-34dB	6.248060	broad-pause-late-edge
+Genesis-21-6->Genesis-21-7	12.770975	12.982200	13.698200	0.716	-34dB	13.663200	broad-pause-late-edge
+Genesis-21-7->Genesis-21-8	22.593016	22.653900	23.234100	0.580	-34dB	23.199100	broad-pause-late-edge
+Genesis-21-8->Genesis-21-9	31.114739	31.241000	31.963800	0.723	-34dB	31.928800	broad-pause-late-edge
+Genesis-21-9->Genesis-21-10	40.054422	40.212200	41.102300	0.890	-34dB	41.067300	broad-pause-late-edge
+Genesis-21-10->Genesis-21-11	51.385760	51.531900	52.390200	0.858	-34dB	52.355200	broad-pause-late-edge
+Genesis-21-11->Genesis-21-12	58.514286	58.886000	59.688300	0.802	-34dB	59.653300	broad-pause-late-edge
+Genesis-21-12->Genesis-21-13	77.670748	77.778000	79.509000	1.731	-34dB	79.474000	broad-pause-late-edge
+Genesis-21-13->Genesis-21-14	83.963356	84.095900	86.369300	2.273	-34dB	86.334300	broad-pause-late-edge
+Genesis-21-14->Genesis-21-15	111.711202	111.786000	112.302000	0.516	-34dB	112.267000	broad-pause-late-edge
+Genesis-21-15->Genesis-21-16	118.561088	118.674000	119.416000	0.742	-34dB	119.381000	broad-pause-late-edge
+Genesis-21-16->Genesis-21-17	136.394014	136.477000	137.451000	0.974	-34dB	137.416000	broad-pause-late-edge
+Genesis-21-17->Genesis-21-18	157.785437	157.915000	158.529000	0.614	-34dB	158.494000	broad-pause-late-edge
+Genesis-21-18->Genesis-21-19	165.239042	165.431000	165.927000	0.496	-34dB	165.892000	broad-pause-late-edge
+Genesis-21-19->Genesis-21-20	177.383078	177.613000	178.250000	0.637	-34dB	178.215000	broad-pause-late-edge
+Genesis-21-20->Genesis-21-21	186.740720	186.826000	187.551000	0.725	-34dB	187.516000	broad-pause-late-edge
