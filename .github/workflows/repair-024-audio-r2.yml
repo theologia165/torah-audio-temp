@@ -1,10 +1,10 @@
-name: Repair 024 all audio boundaries r3
+name: Repair 024 audio boundaries r4 native
 
 on:
   push:
     branches: [main]
     paths:
-      - '024/repair_all_audio_r2.py'
+      - '024/repair_audio_r4_native.py'
       - '.github/workflows/repair-024-audio-r2.yml'
   workflow_dispatch:
 
@@ -18,29 +18,30 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install ffmpeg
         run: sudo apt-get update -qq && sudo apt-get install -y ffmpeg
-      - name: Download PocketTorah source and official labels
+      - name: Download PocketTorah source, official labels, and native Genesis text
         run: |
           curl -L --fail -o 024/Vayera-3.mp3 https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/audio/Vayera-3.mp3
           curl -L --fail -o 024/Vayera-3.txt https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/torah/labels/Vayera-3.txt
-      - name: Rebuild Genesis 19 clips with safe final-word tails
-        run: python 024/repair_all_audio_r2.py | tee 024/repair-r3.log
-      - name: Verify files and all boundary conditions
+          curl -L --fail -o 024/Genesis-PocketTorah.json https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/torah/json/Genesis.json
+      - name: Rebuild Genesis 19:4-20 from PocketTorah native verse word arrays
+        run: python 024/repair_audio_r4_native.py | tee 024/repair-r4.log
+      - name: Verify r4 files and native-data audit
         run: |
-          test "$(find 024/audio -maxdepth 1 -name '024-Genesis-19-*-r3-study.mp3' | wc -l)" -eq 20
-          test "$(find 024/audio-normal -maxdepth 1 -name '024-Genesis-19-*-r3.mp3' | wc -l)" -eq 20
-          grep -q '^Genesis-19-1' 024/boundaries-r3.tsv
-          grep -q '^Genesis-19-20' 024/boundaries-r3.tsv
-          grep -q 'PASS:' 024/repair-r3.log
-      - name: Commit repaired clips and boundary audit
+          test "$(find 024/audio -maxdepth 1 -name '024-Genesis-19-*-r4-study.mp3' | wc -l)" -eq 17
+          test "$(find 024/audio-normal -maxdepth 1 -name '024-Genesis-19-*-r4.mp3' | wc -l)" -eq 17
+          grep -q '^Genesis-19-4' 024/boundaries-r4-native.tsv
+          grep -q '^Genesis-19-20' 024/boundaries-r4-native.tsv
+          grep -q 'PASS:' 024/repair-r4.log
+      - name: Commit repaired clips and native audit
         run: |
-          rm -f 024/Vayera-3.mp3 024/Vayera-3.txt
+          rm -f 024/Vayera-3.mp3 024/Vayera-3.txt 024/Genesis-PocketTorah.json
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add 024/audio/*-r3-study.mp3 024/audio-normal/*-r3.mp3 024/boundaries-r3.tsv 024/repair-r3.log
+          git add 024/audio/*-r4-study.mp3 024/audio-normal/*-r4.mp3 024/boundaries-r4-native.tsv 024/source/PocketTorah-Genesis-19-native.json 024/repair-r4.log
           if git diff --cached --quiet; then
             echo 'No changes to commit'
           else
-            git commit -m 'Repair Genesis 19:3-20 final-word boundaries r3'
+            git commit -m 'Repair 024 Genesis 19:4-20 with PocketTorah native tokens r4'
             git pull --rebase origin main
             git push
           fi
