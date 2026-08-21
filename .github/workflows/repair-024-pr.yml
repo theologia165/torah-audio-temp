@@ -5,33 +5,97 @@ on:
     paths:
       - '024-repair-trigger.txt'
 
+permissions:
+  contents: write
+
 jobs:
   repair:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
       - name: Install ffmpeg
-        run: sudo apt-get update -qq && sudo apt-get install -y ffmpeg
-      - name: Download PocketTorah source and official labels
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+      - name: Download PocketTorah source and labels
         run: |
           curl -L --fail -o 024/Vayera-3.mp3 https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/audio/Vayera-3.mp3
           curl -L --fail -o 024/Vayera-3.txt https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/torah/labels/Vayera-3.txt
-      - name: Rebuild all Genesis 19:1-20 clips from source
-        run: python 024/repair_all_audio_r2.py | tee 024/repair-r2.log
-      - name: Verify repaired set
+      - name: Rebuild Genesis 19:5-20 from measured source pauses
+        shell: bash
         run: |
-          test "$(find 024/audio -maxdepth 1 -name '024-Genesis-19-*-r2-study.mp3' | wc -l)" -eq 20
-          test "$(find 024/audio-normal -maxdepth 1 -name '024-Genesis-19-*-r2.mp3' | wc -l)" -eq 20
-          grep -q '^Genesis-19-1' 024/boundaries-r2.tsv
-          grep -q '^Genesis-19-20' 024/boundaries-r2.tsv
-          grep -q 'PASS:' 024/repair-r2.log
-      - uses: actions/upload-artifact@v4
-        with:
-          name: repaired-024-audio-r2
-          path: |
-            024/audio/*-r2-study.mp3
-            024/audio-normal/*-r2.mp3
-            024/boundaries-r2.tsv
-            024/boundary-repair-r2.tsv
-            024/repair-r2.log
-          retention-days: 1
+          set -euo pipefail
+          cd 024
+          mkdir -p audio audio-normal
+          ffmpeg -hide_banner -i Vayera-3.mp3 -af silencedetect=noise=-38dB:d=0.18 -f null - 2> /tmp/024-silence.log || true
+          python3 - <<'PY'
+          import re, pathlib, subprocess
+          root=pathlib.Path('.')
+          src=root/'Vayera-3.mp3'
+          labels=[float(x) for x in (root/'Vayera-3.txt').read_text().strip().split(',') if x.strip()]
+          counts=[16,20,14,15,15,7,5,29,20,12,13,18,15,22,19,16,19,6,23,17]
+          assert sum(counts)==len(labels)==321
+          first=[]; i=0
+          for c in counts:
+              first.append(i); i+=c
+          log=pathlib.Path('/tmp/024-silence.log').read_text(errors='ignore')
+          starts=[float(x) for x in re.findall(r'silence_start: ([0-9.]+)',log)]
+          ends=[float(x) for x in re.findall(r'silence_end: ([0-9.]+)',log)]
+          sil=[(s,e,(s+e)/2,e-s) for s,e in zip(starts,ends) if e>s]
+          def dur(p):
+              return float(subprocess.check_output(['ffprobe','-v','error','-show_entries','format=duration','-of','default=nw=1:nk=1',str(p)],text=True).strip())
+          total=dur(src)
+          fixed_v4_end=67.939450
+          offset=fixed_v4_end-labels[first[4]]
+          boundaries={4:fixed_v4_end}
+          report=['Genesis 19 / 024 r6 repair','v4 end fixed from user-confirmed r5: 67.939450',f'initial label-to-source offset={offset:.6f}s','boundary source = measured silence midpoint nearest next-verse label + tracked offset','']
+          prev=fixed_v4_end
+          for v in range(5,20):
+              next_label=labels[first[v]]
+              expected=next_label+offset
+              cand=[x for x in sil if x[2]>prev+1.0 and abs(x[2]-expected)<=2.5 and x[3]>=0.20]
+              if not cand:
+                  cand=[x for x in sil if x[2]>prev+1.0 and abs(x[2]-expected)<=4.5 and x[3]>=0.16]
+              if not cand:
+                  raise RuntimeError(f'No pause after v{v}, expected {expected:.3f}')
+              best=min(cand,key=lambda x:abs(x[2]-expected))
+              strong=[x for x in cand if x[3]>=0.35 and abs(x[2]-expected)<=abs(best[2]-expected)+0.45]
+              if strong: best=min(strong,key=lambda x:abs(x[2]-expected))
+              s,e,mid,sdur=best
+              boundaries[v]=mid
+              old=offset; offset=mid-next_label
+              report.append(f'after v{v:02d}: next_label={next_label:.6f} expected={expected:.6f} silence={s:.6f}-{e:.6f} dur={sdur:.3f} cut={mid:.6f} offset={old:.6f}->{offset:.6f}')
+              prev=mid
+          boundaries[20]=total
+          ATEMPO=0.739931
+          for v in range(5,21):
+              start,end=boundaries[v-1],boundaries[v]
+              normal=root/'audio-normal'/f'024-Genesis-19-{v}-r6.mp3'
+              study=root/'audio'/f'024-Genesis-19-{v}-r6-study.mp3'
+              subprocess.run(['ffmpeg','-nostdin','-y','-hide_banner','-loglevel','error','-ss',f'{start:.6f}','-to',f'{end:.6f}','-i',str(src),'-vn','-ac','1','-codec:a','libmp3lame','-q:a','3',str(normal)],check=True)
+              subprocess.run(['ffmpeg','-nostdin','-y','-hide_banner','-loglevel','error','-i',str(normal),'-filter:a',f'atempo={ATEMPO:.6f}','-codec:a','libmp3lame','-q:a','3',str(study)],check=True)
+              report.append(f'v{v:02d}: source={start:.6f}-{end:.6f} normal={dur(normal):.3f}s study={dur(study):.3f}s')
+          report.append('')
+          report.append('leading-silence audit')
+          for v in range(5,21):
+              p=root/'audio'/f'024-Genesis-19-{v}-r6-study.mp3'
+              proc=subprocess.run(['ffmpeg','-hide_banner','-i',str(p),'-af','silencedetect=noise=-38dB:d=0.18','-f','null','-'],stderr=subprocess.PIPE,stdout=subprocess.DEVNULL,text=True)
+              ss=[float(x) for x in re.findall(r'silence_start: ([0-9.]+)',proc.stderr)]
+              ee=[float(x) for x in re.findall(r'silence_end: ([0-9.]+)',proc.stderr)]
+              lead=ee[0] if ss and ee and ss[0]<=0.08 else 0.0
+              report.append(f'v{v:02d}: leading={lead:.3f}s')
+              if lead>1.20: raise RuntimeError(f'long leading silence v{v}: {lead:.3f}s')
+          (root/'repair-r6.log').write_text('\n'.join(report)+'\n',encoding='utf-8')
+          print('\n'.join(report))
+          PY
+      - name: Commit generated r6 files to PR branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add 024/audio/024-Genesis-19-*-r6-study.mp3 024/audio-normal/024-Genesis-19-*-r6.mp3 024/repair-r6.log
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m '[audio-r6] Build 024 Genesis 19:5-20 from measured pauses'
+          git push origin HEAD:${{ github.head_ref }}
