@@ -1,0 +1,81 @@
+name: Repair 025 audio r4
+
+on:
+  push:
+    paths:
+      - '.github/workflows/repair-025-audio-r4.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    if: ${{ !contains(github.event.head_commit.message, '[audio-025-r4]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Rebuild Genesis 20:2 through 21:4 from measured source pauses
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg curl
+          cd 025
+          curl -L --fail --silent --show-error -o Vayera-4.mp3 https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/audio/Vayera-4.mp3
+          mkdir -p audio audio-normal
+          python3 - <<'PY'
+          import pathlib, subprocess
+          root=pathlib.Path('.')
+          src=root/'Vayera-4.mp3'
+          # Boundaries are measured source-pause midpoints from candidate-025-boundaries.tsv.
+          # Start of Gen 20:2 is the confirmed Gen 20:1->20:2 boundary.
+          spans = [
+            ('Genesis-20-2',223.251500,236.533500),
+            ('Genesis-20-3',236.533500,250.421000),
+            ('Genesis-20-4',250.421000,260.675500),
+            ('Genesis-20-5',260.675500,272.666000),
+            ('Genesis-20-6',272.666000,294.378000),
+            ('Genesis-20-7',294.378000,310.024500),
+            ('Genesis-20-8',310.024500,323.916000),
+            ('Genesis-20-9',323.916000,348.397000),
+            ('Genesis-20-10',348.397000,356.351000),
+            ('Genesis-20-11',356.351000,366.680500),
+            ('Genesis-20-12',366.680500,374.179500),
+            ('Genesis-20-13',374.179500,397.633500),
+            ('Genesis-20-14',397.633500,410.799000),
+            ('Genesis-20-15',410.799000,418.380000),
+            ('Genesis-20-16',418.380000,434.061000),
+            ('Genesis-20-17',434.061000,445.809500),
+            ('Genesis-20-18',445.809500,455.447500),
+            ('Genesis-21-1',455.447500,466.185500),
+            ('Genesis-21-2',466.185500,478.614500),
+            ('Genesis-21-3',478.614500,486.855500),
+            ('Genesis-21-4',486.855500,497.423750),
+          ]
+          atempo=0.692086
+          def dur(p):
+              return float(subprocess.check_output(['ffprobe','-v','error','-show_entries','format=duration','-of','default=nw=1:nk=1',str(p)],text=True).strip())
+          report=['025 r4 repair: Genesis 20:2-21:4','Each clip rebuilt independently from original Vayera-4.mp3 using measured source-pause boundaries.','']
+          for ref,start,end in spans:
+              if end-start < 1.0:
+                  raise RuntimeError(f'Implausibly short {ref}: {end-start:.3f}s')
+              normal=root/'audio-normal'/f'025-{ref}-r4.mp3'
+              study=root/'audio'/f'025-{ref}-r4-study.mp3'
+              subprocess.run(['ffmpeg','-nostdin','-y','-hide_banner','-loglevel','error','-ss',f'{start:.6f}','-to',f'{end:.6f}','-i',str(src),'-vn','-ac','1','-codec:a','libmp3lame','-q:a','3',str(normal)],check=True)
+              subprocess.run(['ffmpeg','-nostdin','-y','-hide_banner','-loglevel','error','-i',str(normal),'-filter:a',f'atempo={atempo:.6f}','-codec:a','libmp3lame','-q:a','3',str(study)],check=True)
+              report.append(f'{ref}: source={start:.6f}-{end:.6f} normal={dur(normal):.3f}s study={dur(study):.3f}s')
+          (root/'repair-025-r4.log').write_text('\n'.join(report)+'\n',encoding='utf-8')
+          print('\n'.join(report))
+          PY
+      - name: Commit corrected audio
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add 025/audio/*-r4-study.mp3 025/audio-normal/*-r4.mp3 025/repair-025-r4.log
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m '[audio-025-r4] Rebuild 025 Genesis 20:2-21:4 from measured pauses'
+          git push
