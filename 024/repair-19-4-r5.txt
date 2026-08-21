@@ -1,0 +1,8 @@
+Genesis 19:4 r5
+source_start=53.771700
+source_end=67.939450
+start_basis=end of measured 4.994s source silence 48.778-53.772
+end_basis=midpoint of measured strong silence 67.634-68.245
+normal_duration=14.210612
+study_duration=19.173878
+study_silences:
