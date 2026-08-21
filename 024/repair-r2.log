@@ -1,0 +1,11 @@
+source_duration=299.494000
+labels=321 tokens=321 verses=20
+first three corrected boundaries:
+('Genesis 19:1', 16.877823, 17.644082, 17.618481, 'silence midpoint -20dB 17.592880-17.644082; last-token onset 16.877823; next-verse onset 17.644082')
+('Genesis 19:2', 36.418356, 37.203655, 37.178655, 'fallback next-verse onset minus 25ms; last-token onset 36.418356; next-verse onset 37.203655')
+('Genesis 19:3', 47.433206, 48.404496, 48.040791, 'silence midpoint -20dB 48.009442-48.072140; last-token onset 47.433206; next-verse onset 48.404496')
+last three corrected boundaries:
+('Genesis 19:17', 247.911378, 248.944666, 248.8025005, 'silence midpoint -28dB 248.767319-248.837682; last-token onset 247.911378; next-verse onset 248.944666')
+('Genesis 19:18', 252.292519, 253.222479, 252.90202, 'silence midpoint -31dB 252.880433-252.923607; last-token onset 252.292519; next-verse onset 253.222479')
+('Genesis 19:19', 276.161472, 276.843442, 276.6434565, 'silence midpoint -28dB 276.617096-276.669817; last-token onset 276.161472; next-verse onset 276.843442')
+PASS: every shared boundary is after the previous verse's final-token onset and before the next verse's first-token onset

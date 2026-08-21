@@ -1,0 +1,21 @@
+reference	start	end	pockettorah_tokens	last_token_onset	next_verse_onset	boundary_basis
+Genesis-19-1	0.000000	17.618481	16	16.877823	17.644082	silence midpoint -20dB 17.592880-17.644082; last-token onset 16.877823; next-verse onset 17.644082
+Genesis-19-2	17.618481	37.178655	20	36.418356	37.203655	fallback next-verse onset minus 25ms; last-token onset 36.418356; next-verse onset 37.203655
+Genesis-19-3	37.178655	48.040791	14	47.433206	48.404496	silence midpoint -20dB 48.009442-48.072140; last-token onset 47.433206; next-verse onset 48.404496
+Genesis-19-4	48.040791	62.842635	15	62.112420	63.125042	silence midpoint -22dB 62.823644-62.861626; last-token onset 62.112420; next-verse onset 63.125042
+Genesis-19-5	62.842635	75.959791	15	75.235177	75.979144	silence midpoint -25dB 75.940438-75.979145; last-token onset 75.235177; next-verse onset 75.979144
+Genesis-19-6	75.959791	85.756326	7	84.886087	85.816046	silence midpoint -20dB 85.726677-85.785974; last-token onset 84.886087; next-verse onset 85.816046
+Genesis-19-7	85.756326	89.562496	5	88.626589	89.742540	silence midpoint -25dB 89.543687-89.581306; last-token onset 88.626589; next-verse onset 89.742540
+Genesis-19-8	89.562496	111.967677	29	111.104050	111.992677	fallback next-verse onset minus 25ms; last-token onset 111.104050; next-verse onset 111.992677
+Genesis-19-9	111.967677	130.484198	20	129.641236	130.509198	fallback next-verse onset minus 25ms; last-token onset 129.641236; next-verse onset 130.509198
+Genesis-19-10	130.484198	142.800991	12	141.854700	142.825991	fallback next-verse onset minus 25ms; last-token onset 141.854700; next-verse onset 142.825991
+Genesis-19-11	142.800991	154.166446	13	153.737512	154.419482	silence midpoint -20dB 154.103385-154.229507; last-token onset 153.737512; next-verse onset 154.419482
+Genesis-19-12	154.166446	168.321575	18	167.728231	168.451533	silence midpoint -28dB 168.298843-168.344308; last-token onset 167.728231; next-verse onset 168.451533
+Genesis-19-13	168.321575	178.949227	15	177.689127	179.342388	silence midpoint -28dB 178.917427-178.981027; last-token onset 177.689127; next-verse onset 179.342388
+Genesis-19-14	178.949227	196.666701	22	196.143651	197.052944	silence midpoint -28dB 196.648436-196.684966; last-token onset 196.143651; next-verse onset 197.052944
+Genesis-19-15	196.666701	211.855028	19	211.456978	211.952957	silence midpoint -20dB 211.818248-211.891808; last-token onset 211.456978; next-verse onset 211.952957
+Genesis-19-16	211.855028	231.217523	16	230.428146	231.254776	silence midpoint -25dB 231.180278-231.254767; last-token onset 230.428146; next-verse onset 231.254776
+Genesis-19-17	231.217523	248.802501	19	247.911378	248.944666	silence midpoint -28dB 248.767319-248.837682; last-token onset 247.911378; next-verse onset 248.944666
+Genesis-19-18	248.802501	252.902020	6	252.292519	253.222479	silence midpoint -31dB 252.880433-252.923607; last-token onset 252.292519; next-verse onset 253.222479
+Genesis-19-19	252.902020	276.643457	23	276.161472	276.843442	silence midpoint -28dB 276.617096-276.669817; last-token onset 276.161472; next-verse onset 276.843442
+Genesis-19-20	276.643457	299.494000	17	292.880071	299.494000	end of source
