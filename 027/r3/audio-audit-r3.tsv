@@ -1,0 +1,14 @@
+verse	r2_duration	expected_r3_duration	actual_r3_duration	r3_leading_silence	duration_status	boundary_status
+22	16.700000	20.562493	20.584490	0.000000	pass	LOCKED-r2-user-verified
+23	18.280000	22.507926	22.543673	0.188163	pass	LOCKED-r2-user-verified
+24	3.780000	4.654265	4.675918	0.095170	pass	LOCKED-r2-user-verified
+25	8.670000	10.675258	10.710204	0.092336	pass	LOCKED-r2-user-verified
+26	16.870000	20.771811	20.793469	0.139841	pass	LOCKED-r2-user-verified
+27	8.780000	10.810700	10.840816	0.094263	pass	LOCKED-r2-user-verified
+28	8.160000	10.047302	10.057143	0.139252	pass	LOCKED-r2-user-verified
+29	11.220000	13.815040	13.844898	0.112109	pass	LOCKED-r2-user-verified
+30	11.590000	14.270616	14.288980	0.111814	pass	LOCKED-r2-user-verified
+31	9.510000	11.709539	11.728980	0.391020	pass	LOCKED-r2-user-verified
+32	11.660000	14.356806	14.367347	0.000000	pass	LOCKED-r2-user-verified
+33	6.980000	8.594383	8.620408	0.601111	pass	LOCKED-r2-user-verified
+34	9.122500	11.232415	11.258776	0.000000	pass	LOCKED-r2-user-verified
