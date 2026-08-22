@@ -1,0 +1,82 @@
+name: Finalize 027 PocketTorah speed correction
+on:
+  push:
+    paths:
+      - '.github/workflows/speed-correct-027-final.yml'
+permissions:
+  contents: write
+jobs:
+  finalize:
+    if: ${{ !contains(github.event.head_commit.message, '[027-r3-final]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install ffmpeg
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+      - name: Build r3 from locked r2 boundaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          factor=0.812158348
+          mkdir -p 027/r3
+          printf '%s\n' "$factor" > 027/r3/atempo.txt
+          cat > 027/r3/speed-decision.tsv <<'EOF'
+          metric	value
+          027_total_tokens	138
+          027_source_seconds	141.322500
+          027_source_wps	0.976489943
+          026_reference_tokens	232
+          026_reference_seconds	196.885000
+          026_reference_atempo	0.673028
+          target_study_wps	0.793064459
+          027_atempo	0.812158348
+          EOF
+          for v in $(seq 22 34); do
+            in="027/r2/027-Genesis-21-${v}-PocketTorah-r2.mp3"
+            test -s "$in"
+            out="027/r3/027-Genesis-21-${v}-PocketTorah-r3-study.mp3"
+            ffmpeg -hide_banner -loglevel error -nostdin -y -i "$in" -filter:a "atempo=${factor}" -codec:a libmp3lame -q:a 2 "$out"
+          done
+      - name: Audit all 13 outputs without changing boundaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import csv,pathlib,subprocess,re
+          root=pathlib.Path('027'); factor=0.812158348
+          cuts={int(r['verse']):r for r in csv.DictReader(open(root/'r2/source-cuts.tsv',encoding='utf-8'),delimiter='\t')}
+          def dur(p):
+              q=subprocess.run(['ffprobe','-v','error','-show_entries','format=duration','-of','default=nw=1:nk=1',str(p)],capture_output=True,text=True,check=True)
+              return float(q.stdout.strip())
+          def lead(p):
+              q=subprocess.run(['ffmpeg','-hide_banner','-nostdin','-i',str(p),'-af','silencedetect=noise=-38dB:d=0.08','-f','null','-'],capture_output=True,text=True)
+              starts=[float(x) for x in re.findall(r'silence_start: ([0-9.]+)',q.stderr)]
+              ends=[float(x) for x in re.findall(r'silence_end: ([0-9.]+)',q.stderr)]
+              return max([e-s for s,e in zip(starts,ends) if s<=0.03] or [0.0])
+          lines=['verse\tr2_duration\texpected_r3_duration\tactual_r3_duration\tr3_leading_silence\tduration_status\tboundary_status']
+          for v in range(22,35):
+              p=root/f'r3/027-Genesis-21-{v}-PocketTorah-r3-study.mp3'
+              expected=float(cuts[v]['duration'])/factor; actual=dur(p); l=lead(p)
+              ok=abs(actual-expected)<0.20
+              lines.append(f'{v}\t{float(cuts[v]["duration"]):.6f}\t{expected:.6f}\t{actual:.6f}\t{l:.6f}\t{"pass" if ok else "fail"}\tLOCKED-r2-user-verified')
+              assert ok,(v,expected,actual)
+          (root/'r3/audio-audit-r3.tsv').write_text('\n'.join(lines)+'\n',encoding='utf-8')
+          PY
+          cat > 027/r3/README.md <<'EOF'
+          # 027 r3 speed-corrected study audio
+          Source for every file is the user-verified 027 r2 per-verse MP3. r2 boundaries are LOCKED and were not recalculated, trimmed, or moved.
+          Playback rate is 0.812158348 of PocketTorah original speed, derived from 027 words-per-second against the accepted 026 study-speed target rather than a fixed percentage.
+          Leading silence is measured and logged, but is not used to recut an already accepted boundary after time stretching.
+          EOF
+      - name: Commit final r3
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add 027/r3
+          git commit -m '[027-r3-final] Finalize speed-corrected 027 from locked r2 boundaries' || exit 0
+          git push
