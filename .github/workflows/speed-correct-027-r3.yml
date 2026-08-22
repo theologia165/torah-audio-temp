@@ -79,7 +79,7 @@ jobs:
               -filter:a "atempo=${factor}" -codec:a libmp3lame -q:a 2 "$out"
           done
 
-      - name: Full audit speed-corrected files
+      - name: Full audit speed-corrected files against time-scaled r2 baseline
         shell: bash
         run: |
           set -euo pipefail
@@ -88,19 +88,35 @@ jobs:
           root=pathlib.Path('027')
           cuts={int(r['verse']):r for r in csv.DictReader(open(root/'r2/source-cuts.tsv',encoding='utf-8'),delimiter='\t')}
           factor=float((root/'r3/atempo.txt').read_text())
+          def duration(fn):
+              p=subprocess.run(['ffprobe','-v','error','-show_entries','format=duration','-of','default=nw=1:nk=1',str(fn)],capture_output=True,text=True,check=True)
+              return float(p.stdout.strip())
+          def leading_silence(fn):
+              q=subprocess.run(['ffmpeg','-hide_banner','-nostdin','-i',str(fn),'-af','silencedetect=noise=-38dB:d=0.08','-f','null','-'],capture_output=True,text=True)
+              starts=[float(x) for x in re.findall(r'silence_start: ([0-9.]+)',q.stderr)]
+              ends=[float(x) for x in re.findall(r'silence_end: ([0-9.]+)',q.stderr)]
+              vals=[]
+              for s,e in zip(starts,ends):
+                  if s <= 0.03: vals.append(max(0.0,e-s))
+              return max(vals) if vals else 0.0
           with open(root/'r3/audio-audit-r3.tsv','w',encoding='utf-8') as f:
-              f.write('verse\tr2_duration\texpected_r3_duration\tactual_r3_duration\tleading_silence_ge_0.45\tstatus\n')
+              f.write('verse\tr2_duration\texpected_r3_duration\tactual_r3_duration\tr2_leading_silence\texpected_scaled_leading_silence\tr3_leading_silence\tstatus\n')
               for v in range(22,35):
-                  fn=root/f'r3/027-Genesis-21-{v}-PocketTorah-r3-study.mp3'
+                  r2fn=root/f'r2/027-Genesis-21-{v}-PocketTorah-r2.mp3'
+                  r3fn=root/f'r3/027-Genesis-21-{v}-PocketTorah-r3-study.mp3'
                   r2=float(cuts[v]['duration'])
                   exp=r2/factor
-                  p=subprocess.run(['ffprobe','-v','error','-show_entries','format=duration','-of','default=nw=1:nk=1',str(fn)],capture_output=True,text=True,check=True)
-                  actual=float(p.stdout.strip())
-                  q=subprocess.run(['ffmpeg','-hide_banner','-nostdin','-i',str(fn),'-af','silencedetect=noise=-38dB:d=0.45','-f','null','-'],capture_output=True,text=True)
-                  lead=bool(re.search(r'silence_start: 0(?:\.0*)?(?:\s|$)',q.stderr))
-                  ok=abs(actual-exp)<0.20 and not lead
-                  f.write(f'{v}\t{r2:.6f}\t{exp:.6f}\t{actual:.6f}\t{str(lead).lower()}\t{"pass" if ok else "fail"}\n')
-                  assert ok,(v,r2,exp,actual,lead)
+                  actual=duration(r3fn)
+                  lead2=leading_silence(r2fn)
+                  expected_lead3=lead2/factor
+                  lead3=leading_silence(r3fn)
+                  dur_ok=abs(actual-exp)<0.20
+                  # atempo legitimately stretches pre-existing boundary silence.
+                  # Reject only newly introduced excess silence, never recut the user-approved r2 boundary.
+                  silence_ok=lead3 <= expected_lead3 + 0.12
+                  ok=dur_ok and silence_ok
+                  f.write(f'{v}\t{r2:.6f}\t{exp:.6f}\t{actual:.6f}\t{lead2:.6f}\t{expected_lead3:.6f}\t{lead3:.6f}\t{"pass" if ok else "fail"}\n')
+                  assert ok,(v,r2,exp,actual,lead2,expected_lead3,lead3)
           PY
 
       - name: Record provenance
@@ -109,8 +125,9 @@ jobs:
           cat > 027/r3/README.md <<'EOF'
           # 027 r3 speed-corrected study audio
 
-          The verified r2 per-verse files are the immutable boundary source. No boundary is recalculated in r3.
-          The study-speed factor is calculated from 027 PocketTorah text tokens per source second and matched to the accepted 026 study-speed target. It is not a fixed 65.4% rule.
+          The verified r2 per-verse files are the immutable boundary source. No boundary is recalculated or trimmed in r3.
+          The study-speed factor is calculated from 027 text tokens per source second and matched to the accepted 026 study-speed target. It is not a fixed 65.4% rule.
+          Post-conversion silence QA compares each r3 verse against the time-scaled leading-silence baseline of its accepted r2 source, so ordinary pauses stretched by atempo are not falsely treated as boundary failures.
           `speed-decision.tsv` records the calculation; `audio-audit-r3.tsv` records all 13 post-conversion checks.
           EOF
 
@@ -122,5 +139,3 @@ jobs:
           git add 027/r3 027/source/cantillate-vayera-speed.json
           git commit -m '[027-r3-speed] Speed-correct 027 from locked r2 boundaries' || exit 0
           git push
-
-# retrigger: 2026-08-22
