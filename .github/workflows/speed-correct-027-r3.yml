@@ -46,11 +46,8 @@ jobs:
           source_seconds=sum(float(r['duration']) for r in rows)
           total_tokens=sum(counts[int(r['verse'])] for r in rows)
           source_wps=total_tokens/source_seconds
-          # Accepted 026 study target is derived, not a PocketTorah constant:
-          # 026 had 232 PocketTorah tokens / 196.885 s and accepted atempo 0.673028.
           target_wps=(232/196.885)*0.673028
           factor=target_wps/source_wps
-          # keep within sensible slowing range and write exact decision basis
           assert 0.50 < factor < 0.90, factor
           with open(root/'r3/speed-decision.tsv','w',encoding='utf-8') as f:
               f.write('metric\tvalue\n')
@@ -125,3 +122,5 @@ jobs:
           git add 027/r3 027/source/cantillate-vayera-speed.json
           git commit -m '[027-r3-speed] Speed-correct 027 from locked r2 boundaries' || exit 0
           git push
+
+# retrigger: 2026-08-22
