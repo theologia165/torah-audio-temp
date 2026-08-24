@@ -20,7 +20,7 @@ jobs:
     env:
       MODEL: gpt-4o-mini-tts
       VOICE: cedar
-      SPEED: '0.92'
+      SPEED: '0.70'
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -43,7 +43,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p jubilees/02/audio
-          instructions="Use a solemn, measured liturgical reading cadence inspired broadly by traditional Ethiopian church scripture reading. This is an AI pronunciation study, not an imitation of a particular cleric. Read only the provided Classical Ethiopic (Ge'ez) text. Pronounce every fidel distinctly, do not translate, do not add a verse number or commentary, and pause naturally at phrase boundaries."
+          instructions="Use a solemn, very slow and unhurried liturgical reading cadence inspired broadly by traditional Ethiopian church scripture reading. This is an AI pronunciation study, not an imitation of a particular cleric. Read only the provided Classical Ethiopic (Ge'ez) text. Pronounce every fidel distinctly, do not translate, do not add a verse number or commentary, and pause naturally at phrase boundaries."
 
           printf 'verse\tfile\tmodel\tvoice\tspeed\tgenerated_utc\tsha256\n' > jubilees/02/audio/metadata.tsv
 
