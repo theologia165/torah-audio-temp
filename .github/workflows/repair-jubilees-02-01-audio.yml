@@ -1,0 +1,150 @@
+name: Repair Jubilees 2:1 Ge'ez AI audio
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/repair-jubilees-02-01-audio.yml'
+      - 'jubilees/02/source/geez-2-1-clauses.tsv'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: repair-jubilees-02-01-audio
+  cancel-in-progress: false
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    env:
+      MODEL: gpt-4o-mini-tts
+      VOICE: cedar
+      SPEED: '0.70'
+      MIN_FINAL_SECONDS: '15'
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify tools and secret
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          set -euo pipefail
+          test -n "${OPENAI_API_KEY:-}" || { echo 'OPENAI_API_KEY is not configured.'; exit 1; }
+          command -v ffmpeg
+          command -v ffprobe
+          command -v jq
+
+      - name: Generate clauses and assemble verse
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          set -euo pipefail
+          work="$(mktemp -d)"
+          trap 'rm -rf "$work"' EXIT
+          output='jubilees/02/audio/jubilees-2-1-geez-ai.mp3'
+          mkdir -p jubilees/02/audio
+
+          instructions="Read only the supplied Classical Ethiopic (Ge'ez) phrase. Use a solemn, very slow, unhurried scripture-reading cadence inspired broadly by Ethiopian liturgical reading. Pronounce every fidel distinctly. Do not translate, summarize, spell characters, add words, or stop before the end of the supplied phrase."
+
+          : > "$work/concat.txt"
+          clause_count=0
+          tail -n +2 jubilees/02/source/geez-2-1-clauses.tsv |
+          while IFS=$'\t' read -r sequence geez; do
+            [[ -n "$sequence" && -n "$geez" ]] || continue
+            clause="$work/clause-${sequence}.wav"
+            payload="$(jq -n \
+              --arg model "$MODEL" \
+              --arg voice "$VOICE" \
+              --arg input "$geez" \
+              --arg instructions "$instructions" \
+              --argjson speed "$SPEED" \
+              '{model:$model,voice:$voice,input:$input,instructions:$instructions,response_format:"wav",speed:$speed}')"
+
+            status="$(curl --silent --show-error \
+              --output "$clause.tmp" \
+              --write-out '%{http_code}' \
+              https://api.openai.com/v1/audio/speech \
+              -H "Authorization: Bearer $OPENAI_API_KEY" \
+              -H 'Content-Type: application/json' \
+              --data "$payload")"
+
+            if [[ "$status" != '200' ]]; then
+              echo "Speech generation failed for clause $sequence (HTTP $status)."
+              cat "$clause.tmp"
+              exit 1
+            fi
+
+            mv "$clause.tmp" "$clause"
+            seconds="$(ffprobe -v error -show_entries format=duration -of default=nk=1:nw=1 "$clause")"
+            awk -v d="$seconds" 'BEGIN { exit !(d >= 1.5) }' || {
+              echo "Clause $sequence is unexpectedly short: $seconds seconds."
+              exit 1
+            }
+            printf "file '%s'\n" "$clause" >> "$work/concat.txt"
+            clause_count=$((clause_count + 1))
+          done
+
+          generated_clauses="$(find "$work" -name 'clause-*.wav' | wc -l)"
+          [[ "$generated_clauses" -eq 4 ]] || {
+            echo "Expected 4 clauses, generated $generated_clauses."
+            exit 1
+          }
+
+          ffmpeg -hide_banner -loglevel error -f lavfi \
+            -i anullsrc=channel_layout=mono:sample_rate=24000 \
+            -t 0.65 "$work/silence.wav"
+          awk -v silence="$work/silence.wav" '
+            { lines[NR]=$0 }
+            END {
+              for (i=1; i<=NR; i++) {
+                print lines[i]
+                if (i<NR) printf "file '\''%s'\''\n", silence
+              }
+            }' "$work/concat.txt" > "$work/concat-with-pauses.txt"
+
+          ffmpeg -hide_banner -loglevel error \
+            -f concat -safe 0 -i "$work/concat-with-pauses.txt" \
+            -c:a libmp3lame -b:a 64k "$output.tmp"
+          mv "$output.tmp" "$output"
+
+          duration="$(ffprobe -v error -show_entries format=duration -of default=nk=1:nw=1 "$output")"
+          awk -v d="$duration" -v min="$MIN_FINAL_SECONDS" 'BEGIN { exit !(d >= min) }' || {
+            echo "Assembled verse is too short: $duration seconds (minimum $MIN_FINAL_SECONDS)."
+            exit 1
+          }
+
+          checksum="$(sha256sum "$output" | cut -d' ' -f1)"
+          generated="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+          awk -F '\t' -v OFS='\t' \
+            -v file="$output" -v model="$MODEL" -v voice="$VOICE" -v speed="$SPEED" \
+            -v generated="$generated" -v checksum="$checksum" '
+              NR == 1 { print; next }
+              $1 == "2:1" { print "2:1", file, model, voice, speed, generated, checksum; next }
+              { print }
+            ' jubilees/02/audio/metadata.tsv > "$work/metadata.tsv"
+          mv "$work/metadata.tsv" jubilees/02/audio/metadata.tsv
+
+          printf 'verse\tduration_seconds\tclauses\tspeed\tmethod\n' > jubilees/02/audio/jubilees-2-1-geez-ai.audit.tsv
+          printf '2:1\t%s\t4\t%s\tclause-generation-and-concatenation\n' \
+            "$duration" "$SPEED" >> jubilees/02/audio/jubilees-2-1-geez-ai.audit.tsv
+          echo "Repaired Jubilees 2:1 duration: $duration seconds."
+
+      - name: Commit repaired audio
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add jubilees/02/audio/jubilees-2-1-geez-ai.mp3 \
+                  jubilees/02/audio/jubilees-2-1-geez-ai.audit.tsv \
+                  jubilees/02/audio/metadata.tsv
+          if git diff --cached --quiet; then
+            echo 'No repaired audio changes to commit.'
+          else
+            git commit -m "Repair truncated Jubilees 2:1 Ge'ez reading"
+            git pull --rebase
+            git push
+          fi
