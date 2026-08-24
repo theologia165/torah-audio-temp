@@ -1,0 +1,4 @@
+verse	file	model	voice	speed	generated_utc	sha256
+2:1	jubilees/02/audio/jubilees-2-1-geez-ai.mp3	gpt-4o-mini-tts	cedar	0.92	2026-08-24T05:16:30Z	fbd9e673ae304f02ee4c3cc4d70176f82948aed2ee8d8aa0092baabbdaef9b18
+2:2	jubilees/02/audio/jubilees-2-2-geez-ai.mp3	gpt-4o-mini-tts	cedar	0.92	2026-08-24T05:16:41Z	a93f6d4a83da510683c87ed201090de0ad072c27195ff9532949115f8a647b87
+2:3	jubilees/02/audio/jubilees-2-3-geez-ai.mp3	gpt-4o-mini-tts	cedar	0.92	2026-08-24T05:16:43Z	89f772063ae3cf3cf586df5ee2c7754f10ca25f4f3038df9107741dbde64027e
