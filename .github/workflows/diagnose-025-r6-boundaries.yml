@@ -1,0 +1,68 @@
+name: Diagnose 025 r6 boundaries
+
+on:
+  push:
+    paths:
+      - '.github/workflows/diagnose-025-r6-boundaries.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  diagnose:
+    if: ${{ !contains(github.event.head_commit.message, '[025-r6-diag]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg curl
+      - name: Download source and inspect labels/silence around every boundary from 20:8 onward
+        run: |
+          set -euo pipefail
+          mkdir -p 025/source-r6
+          curl -fL --retry 3 -o 025/source-r6/Vayera-4.mp3 https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/audio/Vayera-4.mp3
+          curl -fL --retry 3 -o 025/source-r6/Vayera-4.labels.txt https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/torah/labels/Vayera-4.txt
+          for th in 42 38 34 30 26 22 18; do
+            ffmpeg -nostdin -hide_banner -i 025/source-r6/Vayera-4.mp3 -af silencedetect=noise=-${th}dB:d=0.04 -f null - 2>025/source-r6/silence-${th}.log || true
+          done
+          python3 - <<'PY'
+          import csv,re,pathlib
+          root=pathlib.Path('025')
+          rows=list(csv.DictReader(open(root/'verse-word-counts.tsv',encoding='utf-8'),delimiter='\t'))
+          refs=[r['reference'] for r in rows]; counts=[int(r['pockettorah_tokens']) for r in rows]
+          labels=[float(x) for x in (root/'source-r6/Vayera-4.labels.txt').read_text().strip().split(',') if x.strip()]
+          first=[]; n=0
+          for c in counts: first.append(n); n+=c
+          pauses={}
+          for th in [42,38,34,30,26,22,18]:
+            txt=(root/f'source-r6/silence-{th}.log').read_text(errors='ignore')
+            ss=[float(x) for x in re.findall(r'silence_start: ([0-9.]+)',txt)]
+            ee=[float(x) for x in re.findall(r'silence_end: ([0-9.]+)',txt)]
+            pauses[th]=[(s,e,e-s) for s,e in zip(ss,ee) if e>s]
+          start=refs.index('Genesis-20-8')
+          out=['boundary\tprev_last_labels\tnext_first_labels\tnearby_pauses']
+          for k in range(start,len(refs)-1):
+            pi=first[k]+counts[k]-1
+            ni=first[k+1]
+            prevlabs=labels[max(first[k],pi-4):pi+1]
+            nextlabs=labels[ni:min(ni+5,ni+counts[k+1])]
+            center=(prevlabs[-1]+nextlabs[0])/2
+            ps=[]
+            lo=prevlabs[-1]-1.5; hi=nextlabs[0]+2.5
+            for th in [42,38,34,30,26,22,18]:
+              cand=[(s,e,d) for s,e,d in pauses[th] if e>=lo and s<=hi and d>=0.04]
+              for s,e,d in cand[:8]: ps.append(f'{th}:{s:.3f}-{e:.3f}({d:.3f})')
+            out.append(f'{refs[k]}->{refs[k+1]}\t'+','.join(f'{x:.6f}' for x in prevlabs)+'\t'+','.join(f'{x:.6f}' for x in nextlabs)+'\t'+';'.join(ps))
+          (root/'diagnose-r6-boundaries.tsv').write_text('\n'.join(out)+'\n',encoding='utf-8')
+          PY
+      - name: Commit diagnostic
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add 025/diagnose-r6-boundaries.tsv
+          git commit -m '[025-r6-diag] Diagnose token labels and pauses from Genesis 20:8 onward' || exit 0
+          git push
