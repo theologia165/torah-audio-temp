@@ -1,0 +1,15 @@
+boundary	next_word_label	pause_start	pause_end	adopted_cut	threshold	margin_before_next_onset	status	basis
+START->Genesis-20-9	323.208332	321.076000	321.164000	321.144000	38	2.064	verified-pre-onset	quiet interval before first-word onset
+Genesis-20-9->Genesis-20-10	346.312187	345.220000	345.328000	345.308000	38	1.004	verified-pre-onset	previous tail ended; cut remains before next token onset
+Genesis-20-10->Genesis-20-11	353.696133	353.196000	353.438000	353.418000	34	0.278	verified-pre-onset	previous tail ended; cut remains before next token onset
+Genesis-20-11->Genesis-20-12	363.959353	363.214000	363.310000	363.290000	38	0.669	verified-pre-onset	previous tail ended; cut remains before next token onset
+Genesis-20-12->Genesis-20-13	373.781394	371.705000	371.821000	371.801000	38	1.980	verified-pre-onset	previous tail ended; cut remains before next token onset
+Genesis-20-13->Genesis-20-14	397.163888	395.280000	395.380000	395.360000	38	1.804	verified-pre-onset	previous tail ended; cut remains before next token onset
+Genesis-20-14->Genesis-20-15	409.609784	408.433000	408.515000	408.495000	34	1.115	verified-pre-onset	previous tail ended; cut remains before next token onset
+Genesis-20-15->Genesis-20-16	417.318809	415.682000	415.785000	415.765000	38	1.554	verified-pre-onset	previous tail ended; cut remains before next token onset
+Genesis-20-16->Genesis-20-17	433.410237	430.994000	431.284000	431.264000	38	2.146	verified-pre-onset	previous tail ended; cut remains before next token onset
+Genesis-20-17->Genesis-20-18	445.298854	442.988000	443.123000	443.103000	38	2.196	verified-pre-onset	previous tail ended; cut remains before next token onset
+Genesis-20-18->Genesis-21-1	454.238536	452.722000	452.816000	452.796000	30	1.443	verified-pre-onset	previous tail ended; cut remains before next token onset
+Genesis-21-1->Genesis-21-2	465.848514	463.852000	463.975000	463.955000	38	1.894	verified-pre-onset	previous tail ended; cut remains before next token onset
+Genesis-21-2->Genesis-21-3	477.783570	475.173000	475.505000	475.485000	38	2.299	verified-pre-onset	previous tail ended; cut remains before next token onset
+Genesis-21-3->Genesis-21-4	486.421394	485.982000	486.075000	486.055000	38	0.366	verified-pre-onset	previous tail ended; cut remains before next token onset

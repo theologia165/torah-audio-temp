@@ -1,0 +1,15 @@
+reference	start	end	duration	next_onset_guard
+Genesis-20-9	321.144000	345.308000	24.164000	1.004s-before-next-label
+Genesis-20-10	345.308000	353.418000	8.110000	0.278s-before-next-label
+Genesis-20-11	353.418000	363.290000	9.872000	0.669s-before-next-label
+Genesis-20-12	363.290000	371.801000	8.511000	1.980s-before-next-label
+Genesis-20-13	371.801000	395.360000	23.559000	1.804s-before-next-label
+Genesis-20-14	395.360000	408.495000	13.135000	1.115s-before-next-label
+Genesis-20-15	408.495000	415.765000	7.270000	1.554s-before-next-label
+Genesis-20-16	415.765000	431.264000	15.499000	2.146s-before-next-label
+Genesis-20-17	431.264000	443.103000	11.839000	2.196s-before-next-label
+Genesis-20-18	443.103000	452.796000	9.693000	1.443s-before-next-label
+Genesis-21-1	452.796000	463.955000	11.159000	1.894s-before-next-label
+Genesis-21-2	463.955000	475.485000	11.530000	2.299s-before-next-label
+Genesis-21-3	475.485000	486.055000	10.570000	0.366s-before-next-label
+Genesis-21-4	486.055000	497.423750	11.368750	source-end
