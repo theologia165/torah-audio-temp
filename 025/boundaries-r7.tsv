@@ -1,0 +1,12 @@
+boundary	candidate_pause_start	candidate_pause_end	adopted_cut	previous_final_word	next_opening_word	tail_complete	next_word_not_started	status	basis
+Genesis-20-11->Genesis-20-12	USER-VALIDATED	USER-VALIDATED	363.290000	LOCKED	LOCKED	true	true	LOCKED-user-validated	user confirmed Genesis 20:12 opening is correct
+Genesis-20-12->Genesis-20-13	373.873830	374.796170	374.760000	Genesis 20:12 final word	Genesis 20:13 opening	true	true	verified	broad actual-source pause; r6 cut at 373.382 truncated final word; adopted near pause-end before re-onset
+Genesis-20-13->Genesis-20-14	397.265000	397.927000	397.900000	Genesis 20:13 final word	Genesis 20:14 opening	true	true	verified	actual-source broad pause; adopted at late quiet portion before re-onset
+Genesis-20-14->Genesis-20-15	409.764000	411.927000	411.800000	Genesis 20:14 final word	Genesis 20:15 opening	true	true	verified	very broad actual-source pause; stronger-threshold quiet interval remains through about 411.827
+Genesis-20-15->Genesis-20-16	417.534000	419.147000	419.080000	Genesis 20:15 final word	Genesis 20:16 opening	true	true	verified	broad actual-source pause; multi-threshold pause ends cluster 419.106-419.147
+Genesis-20-16->Genesis-20-17	433.580000	434.542000	434.500000	Genesis 20:16 final word	Genesis 20:17 opening	true	true	verified	broad actual-source pause at 34/30 dB thresholds
+Genesis-20-17->Genesis-20-18	445.405000	446.251000	446.170000	Genesis 20:17 final word	Genesis 20:18 opening	true	true	verified	broad actual-source pause; stronger-threshold quiet tail ends around 446.179
+Genesis-20-18->Genesis-21-1	454.337000	456.529000	456.460000	Genesis 20:18 final word	Genesis 21:1 opening	true	true	verified	very broad actual-source pause; multi-threshold end cluster 456.483-456.529
+Genesis-21-1->Genesis-21-2	465.879000	466.413000	466.380000	Genesis 21:1 final word	Genesis 21:2 opening	true	true	verified	actual-source pause; multi-threshold end cluster 466.400-466.413
+Genesis-21-2->Genesis-21-3	477.930000	478.999000	478.970000	Genesis 21:2 final word	Genesis 21:3 opening	true	true	verified	strong-threshold broad pause ends consistently around 478.995-478.999; later weak-level activity not used as cut target
+Genesis-21-3->Genesis-21-4	486.648000	487.066000	487.040000	Genesis 21:3 final word	Genesis 21:4 opening	true	true	verified	actual-source quiet interval stable across 42/38/34/30 dB thresholds
