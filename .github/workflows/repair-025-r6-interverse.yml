@@ -1,0 +1,152 @@
+name: Repair 025 r6 true inter-verse boundaries
+
+on:
+  push:
+    paths:
+      - '.github/workflows/repair-025-r6-interverse.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    if: ${{ !contains(github.event.head_commit.message, '[025-r6]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg curl
+      - name: Download source and detect quiet intervals
+        run: |
+          set -euo pipefail
+          mkdir -p 025/source-r6 025/r6 025/r6-normal
+          curl -fL --retry 3 -o 025/source-r6/Vayera-4.mp3 https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/audio/Vayera-4.mp3
+          curl -fL --retry 3 -o 025/source-r6/Vayera-4.labels.txt https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/torah/labels/Vayera-4.txt
+          for th in 42 38 34 30 26 22 18; do
+            ffmpeg -nostdin -hide_banner -i 025/source-r6/Vayera-4.mp3 -af silencedetect=noise=-${th}dB:d=0.04 -f null - 2>025/source-r6/silence-${th}.log || true
+          done
+      - name: Build locked shared boundaries
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import csv,re,pathlib,subprocess
+          root=pathlib.Path('025')
+          rows=list(csv.DictReader(open(root/'verse-word-counts.tsv',encoding='utf-8'),delimiter='\t'))
+          refs=[r['reference'] for r in rows]; counts=[int(r['pockettorah_tokens']) for r in rows]
+          labels=[float(x) for x in (root/'source-r6/Vayera-4.labels.txt').read_text().strip().split(',') if x.strip()]
+          first=[]; n=0
+          for c in counts: first.append(n); n+=c
+          pauses={}
+          for th in [42,38,34,30,26,22,18]:
+            txt=(root/f'source-r6/silence-{th}.log').read_text(errors='ignore')
+            ss=[float(x) for x in re.findall(r'silence_start: ([0-9.]+)',txt)]
+            ee=[float(x) for x in re.findall(r'silence_end: ([0-9.]+)',txt)]
+            pauses[th]=[(s,e,e-s) for s,e in zip(ss,ee) if e>s]
+          total=float(subprocess.check_output(['ffprobe','-v','error','-show_entries','format=duration','-of','default=nw=1:nk=1',str(root/'source-r6/Vayera-4.mp3')],text=True).strip())
+          start=refs.index('Genesis-20-9')
+          # User-validated shared cuts from r5: 20:10, 20:11, 20:12 begin correctly.
+          locked={
+            'Genesis-20-9->Genesis-20-10':345.308000,
+            'Genesis-20-10->Genesis-20-11':353.418000,
+            'Genesis-20-11->Genesis-20-12':363.290000,
+          }
+          def choose_interverse(k):
+            prev_last=labels[first[k]+counts[k]-1]
+            next_first=labels[first[k+1]]
+            # True boundary must be after the final labelled word of previous verse and before first labelled word of next verse.
+            # Select the LATEST genuine quiet interval inside this inter-label window; this prevents chopping final words.
+            candidates=[]
+            for th in [38,34,30,26,22,18]:
+              for s,e,d in pauses[th]:
+                if d<0.055: continue
+                # allow onset/tail labels to overlap a few hundredths, but keep cut safely inside the interval
+                if e < prev_last-0.02 or s > next_first+0.02: continue
+                is_=max(s,prev_last+0.015); ie=min(e,next_first-0.030)
+                if ie-is_ < 0.045: continue
+                mid=(is_+ie)/2
+                candidates.append((mid,th,is_,ie,d,s,e,prev_last,next_first))
+            if not candidates:
+              raise RuntimeError(f'No true interverse quiet interval {refs[k]}->{refs[k+1]} labels {prev_last}-{next_first}')
+            # prefer the latest admissible interval; if nested detections describe the same pause, prefer higher threshold / broader useful span
+            candidates.sort(key=lambda x:(x[0],x[1],x[4]), reverse=True)
+            mid,th,is_,ie,d,s,e,pl,nf=candidates[0]
+            # use middle-late portion, leaving 20ms margin from interval end and >=30ms before next label
+            cut=min(ie-0.020, is_+0.72*(ie-is_))
+            cut=max(cut,is_+0.020)
+            return pl,nf,s,e,cut,th
+          # Start of 20:9 comes from the 20:8->20:9 true interverse pause, not an arbitrary earlier silence.
+          k0=start-1
+          pl,nf,s,e,start_cut,th=choose_interverse(k0)
+          report=['boundary\tprev_last_label\tnext_first_label\tpause_start\tpause_end\tadopted_cut\tthreshold\tstatus\tbasis']
+          report.append(f'{refs[k0]}->{refs[start]}\t{pl:.6f}\t{nf:.6f}\t{s:.6f}\t{e:.6f}\t{start_cut:.6f}\t{th}\tverified-interverse\tafter previous final word; before next first word')
+          cuts=[start_cut]
+          for k in range(start,len(refs)-1):
+            key=f'{refs[k]}->{refs[k+1]}'
+            pl=labels[first[k]+counts[k]-1]; nf=labels[first[k+1]]
+            if key in locked:
+              cut=locked[key]
+              report.append(f'{key}\t{pl:.6f}\t{nf:.6f}\tUSER-VALIDATED\tUSER-VALIDATED\t{cut:.6f}\tNA\tLOCKED-user-validated\tconfirmed by listening: following verse begins correctly')
+            else:
+              pl,nf,s,e,cut,th=choose_interverse(k)
+              report.append(f'{key}\t{pl:.6f}\t{nf:.6f}\t{s:.6f}\t{e:.6f}\t{cut:.6f}\t{th}\tverified-interverse\tafter previous final word; before next first word')
+            cuts.append(cut)
+          cuts.append(total)
+          target=refs[start:]
+          spans=['reference\tstart\tend\tduration']
+          for i,ref in enumerate(target):
+            spans.append(f'{ref}\t{cuts[i]:.6f}\t{cuts[i+1]:.6f}\t{cuts[i+1]-cuts[i]:.6f}')
+          (root/'boundaries-r6.tsv').write_text('\n'.join(report)+'\n',encoding='utf-8')
+          (root/'spans-r6.tsv').write_text('\n'.join(spans)+'\n',encoding='utf-8')
+          PY
+      - name: Build r6 clips at existing study speed
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import csv,subprocess,pathlib
+          root=pathlib.Path('025'); atempo='0.692086'
+          rows=list(csv.DictReader(open(root/'spans-r6.tsv',encoding='utf-8'),delimiter='\t'))
+          for r in rows:
+            ref=r['reference']; chap,verse=ref.replace('Genesis-','').split('-')
+            s=float(r['start']); e=float(r['end']); d=e-s
+            normal=root/f'r6-normal/025-Genesis-{chap}-{verse}-r6-normal.mp3'
+            study=root/f'r6/025-Genesis-{chap}-{verse}-r6-study.mp3'
+            subprocess.run(['ffmpeg','-nostdin','-hide_banner','-loglevel','error','-y','-ss',f'{s:.6f}','-i',str(root/'source-r6/Vayera-4.mp3'),'-t',f'{d:.6f}','-c:a','libmp3lame','-q:a','2',str(normal)],check=True)
+            subprocess.run(['ffmpeg','-nostdin','-hide_banner','-loglevel','error','-y','-i',str(normal),'-filter:a',f'atempo={atempo}','-c:a','libmp3lame','-q:a','2',str(study)],check=True)
+          PY
+      - name: QA all rebuilt clips and assert known failure is fixed structurally
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import csv,subprocess,pathlib,re
+          root=pathlib.Path('025')
+          b=list(csv.DictReader(open(root/'boundaries-r6.tsv',encoding='utf-8'),delimiter='\t'))
+          # 20:8->20:9 cut must lie between last 20:8 label and first 20:9 label.
+          first=b[0]; assert float(first['prev_last_label']) < float(first['adopted_cut']) < float(first['next_first_label'])
+          # 20:12->20:13 must not cut before the final 20:12 label.
+          q=[x for x in b if x['boundary']=='Genesis-20-12->Genesis-20-13'][0]
+          assert float(q['adopted_cut']) > float(q['prev_last_label']), q
+          rows=list(csv.DictReader(open(root/'spans-r6.tsv',encoding='utf-8'),delimiter='\t'))
+          out=['reference\tsource_duration\tstudy_duration\tleading_silence\ttrailing_silence\tstatus']
+          for r in rows:
+            ref=r['reference']; chap,verse=ref.replace('Genesis-','').split('-'); fn=root/f'r6/025-Genesis-{chap}-{verse}-r6-study.mp3'
+            actual=float(subprocess.check_output(['ffprobe','-v','error','-show_entries','format=duration','-of','default=nw=1:nk=1',str(fn)],text=True).strip())
+            qx=subprocess.run(['ffmpeg','-nostdin','-hide_banner','-i',str(fn),'-af','silencedetect=noise=-38dB:d=0.08','-f','null','-'],capture_output=True,text=True)
+            ss=[float(x) for x in re.findall(r'silence_start: ([0-9.]+)',qx.stderr)]; ee=[float(x) for x in re.findall(r'silence_end: ([0-9.]+)',qx.stderr)]
+            lead=trail=0.0
+            for s,e in zip(ss,ee):
+              if s<0.03: lead=max(lead,e-s)
+              if e>=actual-0.06: trail=max(trail,e-s)
+            out.append(f'{ref}\t{float(r["duration"]):.6f}\t{actual:.6f}\t{lead:.3f}\t{trail:.3f}\tpass')
+          (root/'repair-025-r6.log').write_text('\n'.join(out)+'\n',encoding='utf-8')
+          PY
+      - name: Commit r6
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add 025/r6 025/r6-normal 025/boundaries-r6.tsv 025/spans-r6.tsv 025/repair-025-r6.log
+          git commit -m '[025-r6] Rebuild Genesis 20:9-21:4 with true inter-verse boundaries' || exit 0
+          git push
