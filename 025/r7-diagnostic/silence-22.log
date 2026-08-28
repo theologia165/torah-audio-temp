@@ -1,0 +1,32 @@
+[mp3 @ 0x5603e26ebf00] Estimating duration from bitrate, this may be inaccurate
+Input #0, mp3, from '025/r7-diagnostic/Vayera-4.mp3':
+  Duration: 00:08:17.42, start: 0.000000, bitrate: 32 kb/s
+  Stream #0:0: Audio: mp3, 44100 Hz, stereo, fltp, 32 kb/s
+Stream mapping:
+  Stream #0:0 -> #0:0 (mp3 (mp3float) -> pcm_s16le (native))
+Output #0, null, to 'pipe:':
+  Metadata:
+    encoder         : Lavf60.16.100
+  Stream #0:0: Audio: pcm_s16le, 44100 Hz, stereo, s16, 1411 kb/s
+    Metadata:
+      encoder         : Lavc60.31.102 pcm_s16le
+size=       0kB time=00:00:00.00 bitrate=N/A speed=N/A    [silencedetect @ 0x5603e26f18c0] silence_start: 0
+[silencedetect @ 0x5603e26f18c0] silence_end: 0.323175 | silence_duration: 0.323175
+[silencedetect @ 0x5603e26f18c0] silence_start: 0.482925
+[silencedetect @ 0x5603e26f18c0] silence_end: 0.565465 | silence_duration: 0.0825397
+[silencedetect @ 0x5603e26f18c0] silence_start: 0.805351
+[silencedetect @ 0x5603e26f18c0] silence_end: 0.843537 | silence_duration: 0.0381859
+[silencedetect @ 0x5603e26f18c0] silence_start: 1.11717
+[silencedetect @ 0x5603e26f18c0] silence_end: 1.22424 | silence_duration: 0.107075
+[silencedetect @ 0x5603e26f18c0] silence_start: 1.298
+[silencedetect @ 0x5603e26f18c0] silence_end: 1.36367 | silence_duration: 0.0656689
+[silencedetect @ 0x5603e26f18c0] silence_start: 1.51574
+[silencedetect @ 0x5603e26f18c0] silence_end: 1.54596 | silence_duration: 0.0302268
+[silencedetect @ 0x5603e26f18c0] silence_start: 1.54599
+[silencedetect @ 0x5603e26f18c0] silence_end: 1.58796 | silence_duration: 0.0419728
+[silencedetect @ 0x5603e26f18c0] silence_start: 1.60503
+[silencedetect @ 0x5603e26f18c0] silence_end: 1.62946 | silence_duration: 0.0244218
+[silencedetect @ 0x5603e26f18c0] silence_start: 2.08218
+[silencedetect @ 0x5603e26f18c0] silence_end: 2.98875 | silence_duration: 0.906576
+[out#0/null @ 0x5603e26ed900] video:0kB audio:517kB subtitle:0kB other streams:0kB global headers:0kB muxing overhead: unknown
+size=N/A time=00:00:02.97 bitrate=N/A speed= 393x    

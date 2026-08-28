@@ -1,0 +1,30 @@
+[mp3 @ 0x560af2edaf00] Estimating duration from bitrate, this may be inaccurate
+Input #0, mp3, from '025/r7-diagnostic/Vayera-4.mp3':
+  Duration: 00:08:17.42, start: 0.000000, bitrate: 32 kb/s
+  Stream #0:0: Audio: mp3, 44100 Hz, stereo, fltp, 32 kb/s
+Stream mapping:
+  Stream #0:0 -> #0:0 (mp3 (mp3float) -> pcm_s16le (native))
+Output #0, null, to 'pipe:':
+  Metadata:
+    encoder         : Lavf60.16.100
+  Stream #0:0: Audio: pcm_s16le, 44100 Hz, stereo, s16, 1411 kb/s
+    Metadata:
+      encoder         : Lavc60.31.102 pcm_s16le
+size=       0kB time=00:00:00.00 bitrate=N/A speed=N/A    [silencedetect @ 0x560af2ee08c0] silence_start: 0
+[silencedetect @ 0x560af2ee08c0] silence_end: 0.326009 | silence_duration: 0.326009
+[silencedetect @ 0x560af2ee08c0] silence_start: 0.467891
+[silencedetect @ 0x560af2ee08c0] silence_end: 0.570703 | silence_duration: 0.102812
+[silencedetect @ 0x560af2ee08c0] silence_start: 0.597052
+[silencedetect @ 0x560af2ee08c0] silence_end: 0.650249 | silence_duration: 0.0531973
+[silencedetect @ 0x560af2ee08c0] silence_start: 0.789229
+[silencedetect @ 0x560af2ee08c0] silence_end: 0.857619 | silence_duration: 0.06839
+[silencedetect @ 0x560af2ee08c0] silence_start: 1.10696
+[silencedetect @ 0x560af2ee08c0] silence_end: 1.23451 | silence_duration: 0.127551
+[silencedetect @ 0x560af2ee08c0] silence_start: 1.28848
+[silencedetect @ 0x560af2ee08c0] silence_end: 1.39592 | silence_duration: 0.107438
+[silencedetect @ 0x560af2ee08c0] silence_start: 1.44925
+[silencedetect @ 0x560af2ee08c0] silence_end: 1.63408 | silence_duration: 0.18483
+[silencedetect @ 0x560af2ee08c0] silence_start: 2.07383
+[silencedetect @ 0x560af2ee08c0] silence_end: 2.99617 | silence_duration: 0.922336
+[out#0/null @ 0x560af2edc900] video:0kB audio:517kB subtitle:0kB other streams:0kB global headers:0kB muxing overhead: unknown
+size=N/A time=00:00:02.97 bitrate=N/A speed= 268x    
