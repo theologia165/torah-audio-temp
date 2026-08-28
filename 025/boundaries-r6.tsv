@@ -1,0 +1,15 @@
+boundary	prev_last_label	next_first_label	pause_start	pause_end	adopted_cut	threshold	status	basis
+Genesis-20-8->Genesis-20-9	322.581394	323.208332	322.857000	322.976000	322.942680	22	verified-interverse	after previous final word; before next first word
+Genesis-20-9->Genesis-20-10	344.361711	346.312187	USER-VALIDATED	USER-VALIDATED	345.308000	NA	LOCKED-user-validated	confirmed by listening: following verse begins correctly
+Genesis-20-10->Genesis-20-11	352.047516	353.696133	USER-VALIDATED	USER-VALIDATED	353.418000	NA	LOCKED-user-validated	confirmed by listening: following verse begins correctly
+Genesis-20-11->Genesis-20-12	362.055317	363.959353	USER-VALIDATED	USER-VALIDATED	363.290000	NA	LOCKED-user-validated	confirmed by listening: following verse begins correctly
+Genesis-20-12->Genesis-20-13	372.945475	373.781394	373.249000	373.434000	373.382200	18	verified-interverse	after previous final word; before next first word
+Genesis-20-13->Genesis-20-14	396.560169	397.163888	396.738000	396.812000	396.791280	22	verified-interverse	after previous final word; before next first word
+Genesis-20-14->Genesis-20-15	408.936405	409.609784	409.197000	409.301000	409.271880	26	verified-interverse	after previous final word; before next first word
+Genesis-20-15->Genesis-20-16	416.575770	417.318809	416.997000	417.054000	417.034000	26	verified-interverse	after previous final word; before next first word
+Genesis-20-16->Genesis-20-17	431.877720	433.410237	433.016000	433.084000	433.064000	30	verified-interverse	after previous final word; before next first word
+Genesis-20-17->Genesis-20-18	443.859217	445.298854	444.982000	445.051000	445.031000	22	verified-interverse	after previous final word; before next first word
+Genesis-20-18->Genesis-21-1	453.031099	454.238536	453.732000	453.835000	453.806160	18	verified-interverse	after previous final word; before next first word
+Genesis-21-1->Genesis-21-2	465.082255	465.848514	465.417000	465.480000	465.460000	26	verified-interverse	after previous final word; before next first word
+Genesis-21-2->Genesis-21-3	477.017312	477.783570	477.412000	477.516000	477.486880	18	verified-interverse	after previous final word; before next first word
+Genesis-21-3->Genesis-21-4	485.631915	486.421394	486.215000	486.353000	486.314360	18	verified-interverse	after previous final word; before next first word
