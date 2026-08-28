@@ -1,0 +1,143 @@
+name: Repair 025 r5 pre-onset boundaries
+
+on:
+  push:
+    paths:
+      - '.github/workflows/repair-025-r5-preonset.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    if: ${{ !contains(github.event.head_commit.message, '[025-r5]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg curl
+      - name: Download authoritative source and labels
+        run: |
+          set -euo pipefail
+          mkdir -p 025/r5 025/r5-normal 025/source-r5
+          curl -fL --retry 3 -o 025/source-r5/Vayera-4.mp3 https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/audio/Vayera-4.mp3
+          curl -fL --retry 3 -o 025/source-r5/Vayera-4.labels.txt https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/torah/labels/Vayera-4.txt
+          for th in 38 34 30 26 22 18; do
+            ffmpeg -nostdin -hide_banner -i 025/source-r5/Vayera-4.mp3 -af silencedetect=noise=-${th}dB:d=0.05 -f null - 2>025/source-r5/silence-${th}.log || true
+          done
+      - name: Recalculate all boundaries from Genesis 20:9 onward using pre-onset gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import csv,re,pathlib,subprocess
+          root=pathlib.Path('025')
+          rows=list(csv.DictReader(open(root/'verse-word-counts.tsv',encoding='utf-8'),delimiter='\t'))
+          refs=[r['reference'] for r in rows]
+          counts=[int(r['pockettorah_tokens']) for r in rows]
+          labels=[float(x) for x in (root/'source-r5/Vayera-4.labels.txt').read_text().strip().split(',') if x.strip()]
+          first=[]; n=0
+          for c in counts:
+            first.append(n); n+=c
+          assert n <= len(labels), (n,len(labels))
+          pauses={}
+          for th in [38,34,30,26,22,18]:
+            txt=(root/f'source-r5/silence-{th}.log').read_text(errors='ignore')
+            ss=[float(x) for x in re.findall(r'silence_start: ([0-9.]+)',txt)]
+            ee=[float(x) for x in re.findall(r'silence_end: ([0-9.]+)',txt)]
+            pauses[th]=[(s,e,e-s) for s,e in zip(ss,ee) if e>s]
+          total=float(subprocess.check_output(['ffprobe','-v','error','-show_entries','format=duration','-of','default=nw=1:nk=1',str(root/'source-r5/Vayera-4.mp3')],text=True).strip())
+          target_start=refs.index('Genesis-20-9')
+          target_refs=refs[target_start:]
+          cuts=[]
+          report=['boundary\tnext_word_label\tpause_start\tpause_end\tadopted_cut\tthreshold\tmargin_before_next_onset\tstatus\tbasis']
+          # Start of 20:9: use the last verified-like quiet interval before its own first-word label.
+          def choose_before(label, prev_floor):
+            # Strict rule: pause must finish no later than 50 ms after token label and its midpoint must be before token label.
+            # Prefer the pause whose end is nearest the next-word label, using higher S/N thresholds first.
+            for th in [38,34,30,26,22,18]:
+              cand=[]
+              for s,e,d in pauses[th]:
+                if d < 0.08: continue
+                mid=(s+e)/2
+                if mid <= label-0.015 and e <= label+0.050 and mid > prev_floor+0.4 and s >= label-2.8:
+                  cand.append((abs(label-e),s,e,d,mid,th))
+              if cand:
+                _,s,e,d,mid,th=min(cand,key=lambda x:(x[0],-x[3]))
+                # Choose late part of silence but still at least 30ms before next label.
+                cut=min(e-0.020, label-0.030)
+                cut=max(cut, s+min(0.06,d/2))
+                return s,e,cut,th,label-cut,'verified-pre-onset'
+            raise RuntimeError(f'No qualifying pre-onset silence before {label:.6f}')
+          start_label=labels[first[target_start]]
+          s,e,start_cut,th,margin,status=choose_before(start_label, -1e9)
+          cuts.append(start_cut)
+          report.append(f'START->{target_refs[0]}\t{start_label:.6f}\t{s:.6f}\t{e:.6f}\t{start_cut:.6f}\t{th}\t{margin:.3f}\t{status}\tquiet interval before first-word onset')
+          prev=start_cut
+          for k in range(target_start, len(refs)-1):
+            next_label=labels[first[k+1]]
+            s,e,cut,th,margin,status=choose_before(next_label, prev)
+            report.append(f'{refs[k]}->{refs[k+1]}\t{next_label:.6f}\t{s:.6f}\t{e:.6f}\t{cut:.6f}\t{th}\t{margin:.3f}\t{status}\tprevious tail ended; cut remains before next token onset')
+            cuts.append(cut); prev=cut
+          cuts.append(total)
+          # Create span table.
+          spans=['reference\tstart\tend\tduration\tnext_onset_guard']
+          for i,ref in enumerate(target_refs):
+            st=cuts[i]; en=cuts[i+1]
+            guard='source-end' if i==len(target_refs)-1 else f'{labels[first[target_start+i+1]]-en:.3f}s-before-next-label'
+            spans.append(f'{ref}\t{st:.6f}\t{en:.6f}\t{en-st:.6f}\t{guard}')
+          (root/'boundaries-r5.tsv').write_text('\n'.join(report)+'\n',encoding='utf-8')
+          (root/'spans-r5.tsv').write_text('\n'.join(spans)+'\n',encoding='utf-8')
+          PY
+      - name: Build r5 normal and study clips from locked boundaries
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import csv,subprocess,pathlib
+          root=pathlib.Path('025')
+          rows=list(csv.DictReader(open(root/'spans-r5.tsv',encoding='utf-8'),delimiter='\t'))
+          atempo='0.692086'
+          for r in rows:
+            ref=r['reference']; chap,verse=ref.replace('Genesis-','').split('-')
+            s=float(r['start']); e=float(r['end']); d=e-s
+            normal=root/f'r5-normal/025-Genesis-{chap}-{verse}-r5-normal.mp3'
+            study=root/f'r5/025-Genesis-{chap}-{verse}-r5-study.mp3'
+            subprocess.run(['ffmpeg','-nostdin','-hide_banner','-loglevel','error','-y','-ss',f'{s:.6f}','-i',str(root/'source-r5/Vayera-4.mp3'),'-t',f'{d:.6f}','-c:a','libmp3lame','-q:a','2',str(normal)],check=True)
+            subprocess.run(['ffmpeg','-nostdin','-hide_banner','-loglevel','error','-y','-i',str(normal),'-filter:a',f'atempo={atempo}','-c:a','libmp3lame','-q:a','2',str(study)],check=True)
+          PY
+      - name: Post-build QA
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import csv,subprocess,pathlib,re
+          root=pathlib.Path('025')
+          rows=list(csv.DictReader(open(root/'spans-r5.tsv',encoding='utf-8'),delimiter='\t'))
+          out=['reference\tsource_duration\tstudy_duration\tleading_silence\ttrailing_silence\tstatus']
+          for r in rows:
+            ref=r['reference']; chap,verse=ref.replace('Genesis-','').split('-')
+            fn=root/f'r5/025-Genesis-{chap}-{verse}-r5-study.mp3'
+            actual=float(subprocess.check_output(['ffprobe','-v','error','-show_entries','format=duration','-of','default=nw=1:nk=1',str(fn)],text=True).strip())
+            q=subprocess.run(['ffmpeg','-nostdin','-hide_banner','-i',str(fn),'-af','silencedetect=noise=-38dB:d=0.08','-f','null','-'],capture_output=True,text=True)
+            ss=[float(x) for x in re.findall(r'silence_start: ([0-9.]+)',q.stderr)]
+            ee=[float(x) for x in re.findall(r'silence_end: ([0-9.]+)',q.stderr)]
+            lead=0.0; trail=0.0
+            for s,e in zip(ss,ee):
+              if s<0.03: lead=max(lead,e-s)
+              if e>=actual-0.06: trail=max(trail,e-s)
+            status='pass' if lead<1.2 else 'review-leading-silence'
+            out.append(f'{ref}\t{float(r["duration"]):.6f}\t{actual:.6f}\t{lead:.3f}\t{trail:.3f}\t{status}')
+          (root/'repair-025-r5.log').write_text('\n'.join(out)+'\n',encoding='utf-8')
+          PY
+      - name: Commit r5 outputs
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add 025/r5 025/r5-normal 025/boundaries-r5.tsv 025/spans-r5.tsv 025/repair-025-r5.log
+          git commit -m '[025-r5] Rebuild Genesis 20:9-21:4 from pre-onset locked boundaries' || exit 0
+          git push
