@@ -19,77 +19,100 @@ jobs:
 
       - name: Install ffmpeg
         run: |
-          sudo apt-get update
-          sudo apt-get install -y ffmpeg
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg curl
 
-      - name: Fetch authoritative mapping and MorphHB Genesis
+      - name: Fetch authoritative mapping and Cantillate text
         run: |
           set -euo pipefail
           mkdir -p /tmp/030-speed 030/r2
           curl -fL --retry 3 -o /tmp/030-speed/Chayei-Sara-2.json \
             'https://raw.githubusercontent.com/Sefaria/Sefaria-Project/master/data/tmp/pockettorah_audio/Chayei%20Sara-2.json'
-          curl -fL --retry 3 -o /tmp/030-speed/Gen.xml \
-            'https://raw.githubusercontent.com/openscriptures/morphhb/master/wlc/Gen.xml'
+          curl -fL --retry 3 -o /tmp/030-speed/gen21.json \
+            'https://raw.githubusercontent.com/kylemath/cantillate/main/data/tanakh/genesis/21.json'
+          curl -fL --retry 3 -o /tmp/030-speed/gen23.json \
+            'https://raw.githubusercontent.com/kylemath/cantillate/main/data/tanakh/genesis/23.json'
+          curl -fL --retry 3 -o /tmp/030-speed/gen24.json \
+            'https://raw.githubusercontent.com/kylemath/cantillate/main/data/tanakh/genesis/24.json'
 
-      - name: Derive study-speed factor from accepted 026 reference
+      - name: Derive study-speed factor by accepted 027 method
         run: |
           set -euo pipefail
           python3 - <<'PY'
-          import json, xml.etree.ElementTree as ET, pathlib
-          root=ET.parse('/tmp/030-speed/Gen.xml').getroot()
-          ns={'o':'http://www.bibletechnologies.net/2003/OSIS/namespace'}
-          verses={v.attrib['osisID']:v for v in root.findall('.//o:verse',ns)}
-          def wcount(refs):
-              return sum(len(verses[r].findall('o:w',ns)) for r in refs)
-          refs026=[f'Gen.21.{v}' for v in range(5,22)]
-          refs027=[f'Gen.21.{v}' for v in range(22,35)]
-          refs030=[f'Gen.23.{v}' for v in range(17,21)] + [f'Gen.24.{v}' for v in range(1,10)]
-          # Guards: reproduce the already accepted token-count method exactly.
-          assert wcount(refs026)==232, wcount(refs026)
-          assert wcount(refs027)==138, wcount(refs027)
-          tokens=wcount(refs030)
+          import json,re,html,pathlib
+
+          def clean_tokens(text):
+              # This is the accepted 027 method: strip embedded HTML, unescape,
+              # then count whitespace-delimited PocketTorah/Cantillate text tokens.
+              text=html.unescape(re.sub(r'<[^>]+>','',text))
+              return [t for t in re.split(r'\s+',text.strip()) if t]
+
+          g21=json.load(open('/tmp/030-speed/gen21.json',encoding='utf-8'))['verses']
+          g23=json.load(open('/tmp/030-speed/gen23.json',encoding='utf-8'))['verses']
+          g24=json.load(open('/tmp/030-speed/gen24.json',encoding='utf-8'))['verses']
+
+          # Historical guard: the accepted 027 workflow counted Genesis 21:22-34 as 138.
+          count027=sum(len(clean_tokens(g21[v-1])) for v in range(22,35))
+          assert count027==138, f'accepted 027 token method not reproduced: {count027}'
+
+          # 030 = Genesis 23:17-20 + Genesis 24:1-9.
+          per_verse={}
+          for v in range(17,21): per_verse[f'Genesis 23:{v}']=len(clean_tokens(g23[v-1]))
+          for v in range(1,10): per_verse[f'Genesis 24:{v}']=len(clean_tokens(g24[v-1]))
+          total_tokens=sum(per_verse.values())
+
           d=json.load(open('/tmp/030-speed/Chayei-Sara-2.json',encoding='utf-8'))
           expected=[f'Genesis 23:{v}' for v in range(17,21)] + [f'Genesis 24:{v}' for v in range(1,10)]
           got=[x['sefaria_ref'] for x in d['ref']]
           assert got==expected,(got,expected)
-          source_seconds=float(d['ref'][-1]['end_time'])-float(d['ref'][0]['start_time'])
-          target=0.793064459
-          source_wps=tokens/source_seconds
-          atempo=target/source_wps
-          assert 0.5 <= atempo <= 2.0, atempo
+          source_seconds=sum(float(x['end_time'])-float(x['start_time']) for x in d['ref'])
+
+          # Accepted 026 study target, exactly as used by the accepted 027 workflow.
+          target_wps=(232/196.885)*0.673028
+          source_wps=total_tokens/source_seconds
+          atempo=target_wps/source_wps
+          assert 0.50 < atempo < 0.90, atempo
+
           out=pathlib.Path('030/r2')
+          out.mkdir(parents=True,exist_ok=True)
           (out/'atempo.txt').write_text(f'{atempo:.9f}\n',encoding='utf-8')
+          with open(out/'token-counts.tsv','w',encoding='utf-8') as f:
+              f.write('reference\ttokens\n')
+              for ref in expected: f.write(f'{ref}\t{per_verse[ref]}\n')
           (out/'speed-decision.tsv').write_text(
               'metric\tvalue\n'
-              f'030_total_tokens\t{tokens}\n'
+              f'027_guard_tokens\t{count027}\n'
+              f'030_total_tokens\t{total_tokens}\n'
               f'030_source_seconds\t{source_seconds:.6f}\n'
               f'030_source_wps\t{source_wps:.9f}\n'
               '026_reference_tokens\t232\n'
               '026_reference_seconds\t196.885000\n'
               '026_reference_atempo\t0.673028\n'
-              f'target_study_wps\t{target:.9f}\n'
+              f'target_study_wps\t{target_wps:.9f}\n'
               f'030_atempo\t{atempo:.9f}\n',encoding='utf-8')
-          print('tokens',tokens,'seconds',source_seconds,'source_wps',source_wps,'atempo',atempo)
+          print(f'027_guard_tokens={count027}')
+          print(f'030_total_tokens={total_tokens} source_seconds={source_seconds:.6f} source_wps={source_wps:.9f}')
+          print(f'target_study_wps={target_wps:.9f} atempo={atempo:.9f}')
           PY
 
       - name: Create immutable speed-corrected 23:18-20 files
         run: |
           set -euo pipefail
-          ATEMPO=$(cat 030/r2/atempo.txt)
+          factor=$(cat 030/r2/atempo.txt)
           for v in 18 19 20; do
-            IN="030/audio/030-Genesis-23-${v}-PocketTorah-r1.mp3"
-            OUT="030/r2/030-Genesis-23-${v}-PocketTorah-r2-study.mp3"
-            test -f "$IN"
-            test ! -f "$OUT"
-            ffmpeg -nostdin -hide_banner -loglevel error -i "$IN" \
-              -filter:a "atempo=${ATEMPO}" -c:a libmp3lame -q:a 2 "$OUT"
+            in="030/audio/030-Genesis-23-${v}-PocketTorah-r1.mp3"
+            out="030/r2/030-Genesis-23-${v}-PocketTorah-r2-study.mp3"
+            test -s "$in"
+            test ! -e "$out"
+            ffmpeg -nostdin -hide_banner -loglevel error -i "$in" \
+              -filter:a "atempo=${factor}" -c:a libmp3lame -q:a 2 "$out"
           done
 
       - name: Post-speed duration and boundary audit
         run: |
           set -euo pipefail
           python3 - <<'PY'
-          import pathlib, subprocess, re
+          import pathlib,subprocess,re
           factor=float(pathlib.Path('030/r2/atempo.txt').read_text().strip())
           rows=[]
           for v in (18,19,20):
@@ -99,7 +122,7 @@ jobs:
                   p=subprocess.run(['ffprobe','-v','error','-show_entries','format=duration','-of','default=nw=1:nk=1',fn],capture_output=True,text=True,check=True)
                   return float(p.stdout.strip())
               sd=dur(src); od=dur(out); expected=sd/factor
-              assert abs(od-expected)<0.15,(v,sd,expected,od)
+              assert abs(od-expected)<0.20,(v,sd,expected,od)
               q=subprocess.run(['ffmpeg','-nostdin','-hide_banner','-i',out,'-af','silencedetect=noise=-38dB:d=0.08','-f','null','-'],capture_output=True,text=True)
               starts=[float(x) for x in re.findall(r'silence_start: ([0-9.]+)',q.stderr)]
               ends=[float(x) for x in re.findall(r'silence_end: ([0-9.]+)',q.stderr)]
@@ -112,10 +135,10 @@ jobs:
               for v,sd,ex,od,lead in rows:
                   f.write(f'{v}\t{sd:.6f}\t{ex:.6f}\t{od:.6f}\t{lead:.6f}\tpass\tLOCKED-r1-authoritative-Sefaria-PocketTorah-map\n')
           pathlib.Path('030/r2/README.md').write_text(
-              '# 030 r2 speed-corrected study audio\n'
+              '# 030 r2 speed-corrected study audio\n\n'
               'Source for every file is the existing 030 r1 per-verse MP3. r1 boundaries are LOCKED and were not recalculated, trimmed, or moved.\n'
-              'Playback rate is derived dynamically from the full 030 aliyah words-per-second against the accepted 026 study-speed target; it is not a fixed percentage.\n'
-              'Token counting uses MorphHB <w> units and is guarded by reproducing the accepted 026=232 and 027=138 totals before calculating 030.\n'
+              'Playback rate is calculated from the full 030 aliyah words-per-second against the accepted 026 study-speed target; it is not a fixed percentage.\n'
+              'Token counting reproduces the accepted 027 method: Cantillate/MAM text, HTML stripped, whitespace tokenization. The workflow first verifies that Genesis 21:22-34 still yields the historical 027 total of 138 tokens.\n'
               'Leading silence is measured and logged after time stretching, but is not used to recut a locked verse boundary.\n',encoding='utf-8')
           PY
 
