@@ -1,0 +1,4 @@
+verse	r1_duration	expected_r2_duration	actual_r2_duration	r2_leading_silence	duration_status	boundary_status
+18	6.269388	7.646197	7.627755	0.000000	pass	LOCKED-r1-authoritative-Sefaria-PocketTorah-map
+19	17.110204	20.867744	20.845714	0.000000	pass	LOCKED-r1-authoritative-Sefaria-PocketTorah-map
+20	10.945306	13.348984	13.322449	0.000000	pass	LOCKED-r1-authoritative-Sefaria-PocketTorah-map

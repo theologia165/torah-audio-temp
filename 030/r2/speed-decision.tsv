@@ -1,0 +1,10 @@
+metric	value
+027_guard_tokens	138
+030_total_tokens	166
+030_source_seconds	171.624500
+030_source_wps	0.967227872
+026_reference_tokens	232
+026_reference_seconds	196.885000
+026_reference_atempo	0.673028
+target_study_wps	0.793064459
+030_atempo	0.819935489
