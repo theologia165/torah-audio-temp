@@ -1,0 +1,133 @@
+name: Build 030 Chayei Sara 2 study-speed audio
+
+on:
+  push:
+    paths:
+      - '.github/workflows/build-030-chayeisara2-study-speed.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install ffmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
+      - name: Fetch authoritative mapping and MorphHB Genesis
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/030-speed 030/r2
+          curl -fL --retry 3 -o /tmp/030-speed/Chayei-Sara-2.json \
+            'https://raw.githubusercontent.com/Sefaria/Sefaria-Project/master/data/tmp/pockettorah_audio/Chayei%20Sara-2.json'
+          curl -fL --retry 3 -o /tmp/030-speed/Gen.xml \
+            'https://raw.githubusercontent.com/openscriptures/morphhb/master/wlc/Gen.xml'
+
+      - name: Derive study-speed factor from accepted 026 reference
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, xml.etree.ElementTree as ET, pathlib
+          root=ET.parse('/tmp/030-speed/Gen.xml').getroot()
+          ns={'o':'http://www.bibletechnologies.net/2003/OSIS/namespace'}
+          verses={v.attrib['osisID']:v for v in root.findall('.//o:verse',ns)}
+          def wcount(refs):
+              return sum(len(verses[r].findall('o:w',ns)) for r in refs)
+          refs026=[f'Gen.21.{v}' for v in range(5,22)]
+          refs027=[f'Gen.21.{v}' for v in range(22,35)]
+          refs030=[f'Gen.23.{v}' for v in range(17,21)] + [f'Gen.24.{v}' for v in range(1,10)]
+          # Guards: reproduce the already accepted token-count method exactly.
+          assert wcount(refs026)==232, wcount(refs026)
+          assert wcount(refs027)==138, wcount(refs027)
+          tokens=wcount(refs030)
+          d=json.load(open('/tmp/030-speed/Chayei-Sara-2.json',encoding='utf-8'))
+          expected=[f'Genesis 23:{v}' for v in range(17,21)] + [f'Genesis 24:{v}' for v in range(1,10)]
+          got=[x['sefaria_ref'] for x in d['ref']]
+          assert got==expected,(got,expected)
+          source_seconds=float(d['ref'][-1]['end_time'])-float(d['ref'][0]['start_time'])
+          target=0.793064459
+          source_wps=tokens/source_seconds
+          atempo=target/source_wps
+          assert 0.5 <= atempo <= 2.0, atempo
+          out=pathlib.Path('030/r2')
+          (out/'atempo.txt').write_text(f'{atempo:.9f}\n',encoding='utf-8')
+          (out/'speed-decision.tsv').write_text(
+              'metric\tvalue\n'
+              f'030_total_tokens\t{tokens}\n'
+              f'030_source_seconds\t{source_seconds:.6f}\n'
+              f'030_source_wps\t{source_wps:.9f}\n'
+              '026_reference_tokens\t232\n'
+              '026_reference_seconds\t196.885000\n'
+              '026_reference_atempo\t0.673028\n'
+              f'target_study_wps\t{target:.9f}\n'
+              f'030_atempo\t{atempo:.9f}\n',encoding='utf-8')
+          print('tokens',tokens,'seconds',source_seconds,'source_wps',source_wps,'atempo',atempo)
+          PY
+
+      - name: Create immutable speed-corrected 23:18-20 files
+        run: |
+          set -euo pipefail
+          ATEMPO=$(cat 030/r2/atempo.txt)
+          for v in 18 19 20; do
+            IN="030/audio/030-Genesis-23-${v}-PocketTorah-r1.mp3"
+            OUT="030/r2/030-Genesis-23-${v}-PocketTorah-r2-study.mp3"
+            test -f "$IN"
+            test ! -f "$OUT"
+            ffmpeg -nostdin -hide_banner -loglevel error -i "$IN" \
+              -filter:a "atempo=${ATEMPO}" -c:a libmp3lame -q:a 2 "$OUT"
+          done
+
+      - name: Post-speed duration and boundary audit
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import pathlib, subprocess, re
+          factor=float(pathlib.Path('030/r2/atempo.txt').read_text().strip())
+          rows=[]
+          for v in (18,19,20):
+              src=f'030/audio/030-Genesis-23-{v}-PocketTorah-r1.mp3'
+              out=f'030/r2/030-Genesis-23-{v}-PocketTorah-r2-study.mp3'
+              def dur(fn):
+                  p=subprocess.run(['ffprobe','-v','error','-show_entries','format=duration','-of','default=nw=1:nk=1',fn],capture_output=True,text=True,check=True)
+                  return float(p.stdout.strip())
+              sd=dur(src); od=dur(out); expected=sd/factor
+              assert abs(od-expected)<0.15,(v,sd,expected,od)
+              q=subprocess.run(['ffmpeg','-nostdin','-hide_banner','-i',out,'-af','silencedetect=noise=-38dB:d=0.08','-f','null','-'],capture_output=True,text=True)
+              starts=[float(x) for x in re.findall(r'silence_start: ([0-9.]+)',q.stderr)]
+              ends=[float(x) for x in re.findall(r'silence_end: ([0-9.]+)',q.stderr)]
+              lead=0.0
+              for s,e in zip(starts,ends):
+                  if s < 0.03: lead=max(lead,e-s)
+              rows.append((v,sd,expected,od,lead))
+          with open('030/r2/audio-audit-r2.tsv','w',encoding='utf-8') as f:
+              f.write('verse\tr1_duration\texpected_r2_duration\tactual_r2_duration\tr2_leading_silence\tduration_status\tboundary_status\n')
+              for v,sd,ex,od,lead in rows:
+                  f.write(f'{v}\t{sd:.6f}\t{ex:.6f}\t{od:.6f}\t{lead:.6f}\tpass\tLOCKED-r1-authoritative-Sefaria-PocketTorah-map\n')
+          pathlib.Path('030/r2/README.md').write_text(
+              '# 030 r2 speed-corrected study audio\n'
+              'Source for every file is the existing 030 r1 per-verse MP3. r1 boundaries are LOCKED and were not recalculated, trimmed, or moved.\n'
+              'Playback rate is derived dynamically from the full 030 aliyah words-per-second against the accepted 026 study-speed target; it is not a fixed percentage.\n'
+              'Token counting uses MorphHB <w> units and is guarded by reproducing the accepted 026=232 and 027=138 totals before calculating 030.\n'
+              'Leading silence is measured and logged after time stretching, but is not used to recut a locked verse boundary.\n',encoding='utf-8')
+          PY
+
+      - name: Commit r2 study audio and audit
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add 030/r2
+          if git diff --cached --quiet; then
+            echo 'No changes to commit'
+          else
+            git commit -m 'Add 030 Genesis 23:18-20 dynamic study-speed audio r2'
+            git push
+          fi
