@@ -1,0 +1,10 @@
+SOURCE: PocketTorah ChayeiSara-3.mp3
+MEDIA_URL: https://raw.githubusercontent.com/rneiss/PocketTorah/master/data/audio/ChayeiSara-3.mp3
+MAPPING: https://github.com/Sefaria/Sefaria-Project/blob/master/data/tmp/pockettorah_audio/Chayei%20Sara-3.json
+RANGE: Genesis 24:10–24:26
+SOURCE_DURATION: 209.632750 seconds
+WORD_COUNT: 222
+SOURCE_WPS: 1.058995278
+STUDY_TARGET_WPS: 0.793060000
+ATEMPO: 0.748879949
+METHOD: Shared boundaries were locked before per-verse extraction. Speed correction was applied only to extracted r1 files; boundaries were not recalculated.
