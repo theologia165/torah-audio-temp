@@ -1,0 +1,609 @@
+{
+  "range": "Genesis 24:27-24:52",
+  "source_duration": 339.59175,
+  "word_count": 324,
+  "source_wps": 0.9540867821435591,
+  "target_wps": 0.79306,
+  "atempo": 0.831224176712963,
+  "signal_visual_review": "PASS: 25 shared boundaries reviewed on waveform and log-frequency spectrogram sheets; official boundaries fall in low-energy intervals. Genesis 24:33 has a natural mapped leading pause.",
+  "rows": [
+    {
+      "verse_ref": "24:27",
+      "mapping_start": 0.0,
+      "mapping_end": 19.989608,
+      "source_file": "032-Genesis-24-27-PocketTorah-r1.mp3",
+      "study_file": "032-Genesis-24-27-PocketTorah-study-r2.mp3",
+      "source_duration": 20.035918,
+      "study_duration": 24.058776,
+      "source_signal": {
+        "leading_below_-45db_s": 0.12,
+        "trailing_below_-45db_s": 0.06,
+        "peak_dbfs": 1.82
+      },
+      "study_signal": {
+        "leading_below_-45db_s": 0.12,
+        "trailing_below_-45db_s": 0.06,
+        "peak_dbfs": 1.84
+      },
+      "MAPPING_CONFIRMED": "PASS",
+      "SIGNAL_CHECKED": "PASS",
+      "MODEL_AUDIO_CHECKED": "UNAVAILABLE_IN_CURRENT_RUNTIME",
+      "notion_delivery_status": "NOTION_OK"
+    },
+    {
+      "verse_ref": "24:28",
+      "mapping_start": 19.989608,
+      "mapping_end": 27.015966,
+      "source_file": "032-Genesis-24-28-PocketTorah-r1.mp3",
+      "study_file": "032-Genesis-24-28-PocketTorah-study-r2.mp3",
+      "source_duration": 7.053061,
+      "study_duration": 8.463673,
+      "source_signal": {
+        "leading_below_-45db_s": 0.02,
+        "trailing_below_-45db_s": 0.0,
+        "peak_dbfs": 1.76
+      },
+      "study_signal": {
+        "leading_below_-45db_s": 0.02,
+        "trailing_below_-45db_s": 0.0,
+        "peak_dbfs": 1.5
+      },
+      "MAPPING_CONFIRMED": "PASS",
+      "SIGNAL_CHECKED": "PASS",
+      "MODEL_AUDIO_CHECKED": "UNAVAILABLE_IN_CURRENT_RUNTIME",
+      "notion_delivery_status": "NOTION_OK"
+    },
+    {
+      "verse_ref": "24:29",
+      "mapping_start": 27.015966,
+      "mapping_end": 35.550925,
+      "source_file": "032-Genesis-24-29-PocketTorah-r1.mp3",
+      "study_file": "032-Genesis-24-29-PocketTorah-study-r2.mp3",
+      "source_duration": 8.568163,
+      "study_duration": 10.292245,
+      "source_signal": {
+        "leading_below_-45db_s": 0.02,
+        "trailing_below_-45db_s": 0.12,
+        "peak_dbfs": 1.26
+      },
+      "study_signal": {
+        "leading_below_-45db_s": 0.02,
+        "trailing_below_-45db_s": 0.14,
+        "peak_dbfs": 1.17
+      },
+      "MAPPING_CONFIRMED": "PASS",
+      "SIGNAL_CHECKED": "PASS",
+      "MODEL_AUDIO_CHECKED": "UNAVAILABLE_IN_CURRENT_RUNTIME",
+      "notion_delivery_status": "NOTION_OK"
+    },
+    {
+      "verse_ref": "24:30",
+      "mapping_start": 35.550925,
+      "mapping_end": 59.998519,
+      "source_file": "032-Genesis-24-30-PocketTorah-r1.mp3",
+      "study_file": "032-Genesis-24-30-PocketTorah-study-r3.mp3",
+      "source_duration": 24.476735,
+      "study_duration": 29.44,
+      "source_signal": {
+        "leading_below_-45db_s": 0.52,
+        "trailing_below_-45db_s": 0.24,
+        "peak_dbfs": 1.69
+      },
+      "study_signal": {
+        "leading_below_-45db_s": 0.62,
+        "trailing_below_-45db_s": 0.28,
+        "peak_dbfs": 1.51
+      },
+      "MAPPING_CONFIRMED": "PASS",
+      "SIGNAL_CHECKED": "PASS",
+      "MODEL_AUDIO_CHECKED": "UNAVAILABLE_IN_CURRENT_RUNTIME",
+      "notion_delivery_status": "NOTION_OK"
+    },
+    {
+      "verse_ref": "24:31",
+      "mapping_start": 59.998519,
+      "mapping_end": 70.476059,
+      "source_file": "032-Genesis-24-31-PocketTorah-r1.mp3",
+      "study_file": "032-Genesis-24-31-PocketTorah-study-r2.mp3",
+      "source_duration": 10.527347,
+      "study_duration": 12.617143,
+      "source_signal": {
+        "leading_below_-45db_s": 0.52,
+        "trailing_below_-45db_s": 0.18,
+        "peak_dbfs": 1.25
+      },
+      "study_signal": {
+        "leading_below_-45db_s": 0.62,
+        "trailing_below_-45db_s": 0.24,
+        "peak_dbfs": 0.92
+      },
+      "MAPPING_CONFIRMED": "PASS",
+      "SIGNAL_CHECKED": "PASS",
+      "MODEL_AUDIO_CHECKED": "UNAVAILABLE_IN_CURRENT_RUNTIME",
+      "notion_delivery_status": "NOTION_OK"
+    },
+    {
+      "verse_ref": "24:32",
+      "mapping_start": 70.476059,
+      "mapping_end": 84.260121,
+      "source_file": "032-Genesis-24-32-PocketTorah-r1.mp3",
+      "study_file": "032-Genesis-24-32-PocketTorah-study-r2.mp3",
+      "source_duration": 13.818776,
+      "study_duration": 16.613878,
+      "source_signal": {
+        "leading_below_-45db_s": 0.4,
+        "trailing_below_-45db_s": 0.52,
+        "peak_dbfs": 1.75
+      },
+      "study_signal": {
+        "leading_below_-45db_s": 0.46,
+        "trailing_below_-45db_s": 0.6,
+        "peak_dbfs": 1.78
+      },
+      "MAPPING_CONFIRMED": "PASS",
+      "SIGNAL_CHECKED": "PASS",
+      "MODEL_AUDIO_CHECKED": "UNAVAILABLE_IN_CURRENT_RUNTIME",
+      "notion_delivery_status": "NOTION_OK"
+    },
+    {
+      "verse_ref": "24:33",
+      "mapping_start": 84.260121,
+      "mapping_end": 94.84099,
+      "source_file": "032-Genesis-24-33-PocketTorah-r1.mp3",
+      "study_file": "032-Genesis-24-33-PocketTorah-study-r2.mp3",
+      "source_duration": 10.631837,
+      "study_duration": 12.747755,
+      "source_signal": {
+        "leading_below_-45db_s": 1.28,
+        "trailing_below_-45db_s": 0.26,
+        "peak_dbfs": 1.12
+      },
+      "study_signal": {
+        "leading_below_-45db_s": 1.54,
+        "trailing_below_-45db_s": 0.28,
+        "peak_dbfs": 1.23
+      },
+      "MAPPING_CONFIRMED": "PASS",
+      "SIGNAL_CHECKED": "PASS",
+      "MODEL_AUDIO_CHECKED": "UNAVAILABLE_IN_CURRENT_RUNTIME",
+      "notion_delivery_status": "NOTION_OK"
+    },
+    {
+      "verse_ref": "24:34",
+      "mapping_start": 94.84099,
+      "mapping_end": 98.519495,
+      "source_file": "032-Genesis-24-34-PocketTorah-r1.mp3",
+      "study_file": "032-Genesis-24-34-PocketTorah-study-r2.mp3",
+      "source_duration": 3.709388,
+      "study_duration": 4.440816,
+      "source_signal": {
+        "leading_below_-45db_s": 0.34,
+        "trailing_below_-45db_s": 0.28,
+        "peak_dbfs": 1.02
+      },
+      "study_signal": {
+        "leading_below_-45db_s": 0.38,
+        "trailing_below_-45db_s": 0.34,
+        "peak_dbfs": 1.06
+      },
+      "MAPPING_CONFIRMED": "PASS",
+      "SIGNAL_CHECKED": "PASS",
+      "MODEL_AUDIO_CHECKED": "UNAVAILABLE_IN_CURRENT_RUNTIME",
+      "notion_delivery_status": "NOTION_OK"
+    },
+    {
+      "verse_ref": "24:35",
+      "mapping_start": 98.519495,
+      "mapping_end": 113.977483,
+      "source_file": "032-Genesis-24-35-PocketTorah-r1.mp3",
+      "study_file": "032-Genesis-24-35-PocketTorah-study-r2.mp3",
+      "source_duration": 15.490612,
+      "study_duration": 18.625306,
+      "source_signal": {
+        "leading_below_-45db_s": 0.38,
+        "trailing_below_-45db_s": 0.14,
+        "peak_dbfs": 2.85
+      },
+      "study_signal": {
+        "leading_below_-45db_s": 0.44,
+        "trailing_below_-45db_s": 0.16,
+        "peak_dbfs": 2.59
+      },
+      "MAPPING_CONFIRMED": "PASS",
+      "SIGNAL_CHECKED": "PASS",
+      "MODEL_AUDIO_CHECKED": "UNAVAILABLE_IN_CURRENT_RUNTIME",
+      "notion_delivery_status": "NOTION_OK"
+    },
+    {
+      "verse_ref": "24:36",
+      "mapping_start": 113.977483,
+      "mapping_end": 128.753501,
+      "source_file": "032-Genesis-24-36-PocketTorah-r1.mp3",
+      "study_file": "032-Genesis-24-36-PocketTorah-study-r2.mp3",
+      "source_duration": 14.811429,
+      "study_duration": 17.789388,
+      "source_signal": {
+        "leading_below_-45db_s": 0.2,
+        "trailing_below_-45db_s": 0.36,
+        "peak_dbfs": 1.67
+      },
+      "study_signal": {
+        "leading_below_-45db_s": 0.24,
+        "trailing_below_-45db_s": 0.44,
+        "peak_dbfs": 1.61
+      },
+      "MAPPING_CONFIRMED": "PASS",
+      "SIGNAL_CHECKED": "PASS",
+      "MODEL_AUDIO_CHECKED": "UNAVAILABLE_IN_CURRENT_RUNTIME",
+      "notion_delivery_status": "NOTION_OK"
+    },
+    {
+      "verse_ref": "24:37",
+      "mapping_start": 128.753501,
+      "mapping_end": 139.210376,
+      "source_file": "032-Genesis-24-37-PocketTorah-source-r2.mp3",
+      "study_file": "032-Genesis-24-37-PocketTorah-study-r3.mp3",
+      "source_duration": 10.501224,
+      "study_duration": 12.59102,
+      "source_signal": {
+        "leading_below_-45db_s": 0.94,
+        "trailing_below_-45db_s": 0.16,
+        "peak_dbfs": 2.26
+      },
+      "study_signal": {
+        "leading_below_-45db_s": 1.12,
+        "trailing_below_-45db_s": 0.18,
+        "peak_dbfs": 2.23
+      },
+      "MAPPING_CONFIRMED": "PASS",
+      "SIGNAL_CHECKED": "PASS",
+      "MODEL_AUDIO_CHECKED": "UNAVAILABLE_IN_CURRENT_RUNTIME",
+      "notion_delivery_status": "NOTION_OK"
+    },
+    {
+      "verse_ref": "24:38",
+      "mapping_start": 139.210376,
+      "mapping_end": 148.034655,
+      "source_file": "032-Genesis-24-38-PocketTorah-r1.mp3",
+      "study_file": "032-Genesis-24-38-PocketTorah-study-r2.mp3",
+      "source_duration": 8.85551,
+      "study_duration": 10.631837,
+      "source_signal": {
+        "leading_below_-45db_s": 0.26,
+        "trailing_below_-45db_s": 0.1,
+        "peak_dbfs": 1.35
+      },
+      "study_signal": {
+        "leading_below_-45db_s": 0.3,
+        "trailing_below_-45db_s": 0.12,
+        "peak_dbfs": 1.43
+      },
+      "MAPPING_CONFIRMED": "PASS",
+      "SIGNAL_CHECKED": "PASS",
+      "MODEL_AUDIO_CHECKED": "UNAVAILABLE_IN_CURRENT_RUNTIME",
+      "notion_delivery_status": "NOTION_OK"
+    },
+    {
+      "verse_ref": "24:39",
+      "mapping_start": 148.034655,
+      "mapping_end": 154.337712,
+      "source_file": "032-Genesis-24-39-PocketTorah-r1.mp3",
+      "study_file": "032-Genesis-24-39-PocketTorah-study-r2.mp3",
+      "source_duration": 6.347755,
+      "study_duration": 7.601633,
+      "source_signal": {
+        "leading_below_-45db_s": 0.2,
+        "trailing_below_-45db_s": 0.36,
+        "peak_dbfs": 1.07
+      },
+      "study_signal": {
+        "leading_below_-45db_s": 0.22,
+        "trailing_below_-45db_s": 0.42,
+        "peak_dbfs": 1.01
+      },
+      "MAPPING_CONFIRMED": "PASS",
+      "SIGNAL_CHECKED": "PASS",
+      "MODEL_AUDIO_CHECKED": "UNAVAILABLE_IN_CURRENT_RUNTIME",
+      "notion_delivery_status": "NOTION_OK"
+    },
+    {
+      "verse_ref": "24:40",
+      "mapping_start": 154.337712,
+      "mapping_end": 170.746325,
+      "source_file": "032-Genesis-24-40-PocketTorah-source-r2.mp3",
+      "study_file": "032-Genesis-24-40-PocketTorah-study-r3.mp3",
+      "source_duration": 16.457143,
+      "study_duration": 19.774694,
+      "source_signal": {
+        "leading_below_-45db_s": 0.04,
+        "trailing_below_-45db_s": 0.46,
+        "peak_dbfs": 1.05
+      },
+      "study_signal": {
+        "leading_below_-45db_s": 0.04,
+        "trailing_below_-45db_s": 0.56,
+        "peak_dbfs": 1.13
+      },
+      "MAPPING_CONFIRMED": "PASS",
+      "SIGNAL_CHECKED": "PASS",
+      "MODEL_AUDIO_CHECKED": "UNAVAILABLE_IN_CURRENT_RUNTIME",
+      "notion_delivery_status": "NOTION_OK"
+    },
+    {
+      "verse_ref": "24:41",
+      "mapping_start": 170.746325,
+      "mapping_end": 182.959789,
+      "source_file": "032-Genesis-24-41-PocketTorah-r1.mp3",
+      "study_file": "032-Genesis-24-41-PocketTorah-study-r2.mp3",
+      "source_duration": 12.251429,
+      "study_duration": 14.706939,
+      "source_signal": {
+        "leading_below_-45db_s": 0.62,
+        "trailing_below_-45db_s": 0.18,
+        "peak_dbfs": 0.59
+      },
+      "study_signal": {
+        "leading_below_-45db_s": 0.72,
+        "trailing_below_-45db_s": 0.2,
+        "peak_dbfs": 0.63
+      },
+      "MAPPING_CONFIRMED": "PASS",
+      "SIGNAL_CHECKED": "PASS",
+      "MODEL_AUDIO_CHECKED": "UNAVAILABLE_IN_CURRENT_RUNTIME",
+      "notion_delivery_status": "NOTION_OK"
+    },
+    {
+      "verse_ref": "24:42",
+      "mapping_start": 182.959789,
+      "mapping_end": 196.59919,
+      "source_file": "032-Genesis-24-42-PocketTorah-r1.mp3",
+      "study_file": "032-Genesis-24-42-PocketTorah-study-r2.mp3",
+      "source_duration": 13.688163,
+      "study_duration": 16.43102,
+      "source_signal": {
+        "leading_below_-45db_s": 0.92,
+        "trailing_below_-45db_s": 0.34,
+        "peak_dbfs": 0.74
+      },
+      "study_signal": {
+        "leading_below_-45db_s": 1.08,
+        "trailing_below_-45db_s": 0.42,
+        "peak_dbfs": 0.65
+      },
+      "MAPPING_CONFIRMED": "PASS",
+      "SIGNAL_CHECKED": "PASS",
+      "MODEL_AUDIO_CHECKED": "UNAVAILABLE_IN_CURRENT_RUNTIME",
+      "notion_delivery_status": "NOTION_OK"
+    },
+    {
+      "verse_ref": "24:43",
+      "mapping_start": 196.59919,
+      "mapping_end": 209.402316,
+      "source_file": "032-Genesis-24-43-PocketTorah-r1.mp3",
+      "study_file": "032-Genesis-24-43-PocketTorah-study-r2.mp3",
+      "source_duration": 12.852245,
+      "study_duration": 15.412245,
+      "source_signal": {
+        "leading_below_-45db_s": 0.48,
+        "trailing_below_-45db_s": 0.56,
+        "peak_dbfs": 1.57
+      },
+      "study_signal": {
+        "leading_below_-45db_s": 0.54,
+        "trailing_below_-45db_s": 0.7,
+        "peak_dbfs": 1.32
+      },
+      "MAPPING_CONFIRMED": "PASS",
+      "SIGNAL_CHECKED": "PASS",
+      "MODEL_AUDIO_CHECKED": "UNAVAILABLE_IN_CURRENT_RUNTIME",
+      "notion_delivery_status": "NOTION_OK"
+    },
+    {
+      "verse_ref": "24:44",
+      "mapping_start": 209.402316,
+      "mapping_end": 220.455015,
+      "source_file": "032-Genesis-24-44-PocketTorah-r1.mp3",
+      "study_file": "032-Genesis-24-44-PocketTorah-study-r2.mp3",
+      "source_duration": 11.102041,
+      "study_duration": 13.322449,
+      "source_signal": {
+        "leading_below_-45db_s": 0.68,
+        "trailing_below_-45db_s": 0.22,
+        "peak_dbfs": -0.12
+      },
+      "study_signal": {
+        "leading_below_-45db_s": 0.4,
+        "trailing_below_-45db_s": 0.24,
+        "peak_dbfs": -0.19
+      },
+      "MAPPING_CONFIRMED": "PASS",
+      "SIGNAL_CHECKED": "PASS",
+      "MODEL_AUDIO_CHECKED": "UNAVAILABLE_IN_CURRENT_RUNTIME",
+      "notion_delivery_status": "NOTION_OK"
+    },
+    {
+      "verse_ref": "24:45",
+      "mapping_start": 220.455015,
+      "mapping_end": 236.894743,
+      "source_file": "032-Genesis-24-45-PocketTorah-r1.mp3",
+      "study_file": "032-Genesis-24-45-PocketTorah-study-r2.mp3",
+      "source_duration": 16.483265,
+      "study_duration": 19.800816,
+      "source_signal": {
+        "leading_below_-45db_s": 0.18,
+        "trailing_below_-45db_s": 0.06,
+        "peak_dbfs": 0.44
+      },
+      "study_signal": {
+        "leading_below_-45db_s": 0.18,
+        "trailing_below_-45db_s": 0.06,
+        "peak_dbfs": 0.36
+      },
+      "MAPPING_CONFIRMED": "PASS",
+      "SIGNAL_CHECKED": "PASS",
+      "MODEL_AUDIO_CHECKED": "UNAVAILABLE_IN_CURRENT_RUNTIME",
+      "notion_delivery_status": "NOTION_OK"
+    },
+    {
+      "verse_ref": "24:46",
+      "mapping_start": 236.894743,
+      "mapping_end": 250.037237,
+      "source_file": "032-Genesis-24-46-PocketTorah-r1.mp3",
+      "study_file": "032-Genesis-24-46-PocketTorah-study-r2.mp3",
+      "source_duration": 13.191837,
+      "study_duration": 15.830204,
+      "source_signal": {
+        "leading_below_-45db_s": 0.34,
+        "trailing_below_-45db_s": 0.34,
+        "peak_dbfs": 0.42
+      },
+      "study_signal": {
+        "leading_below_-45db_s": 0.4,
+        "trailing_below_-45db_s": 0.4,
+        "peak_dbfs": 0.34
+      },
+      "MAPPING_CONFIRMED": "PASS",
+      "SIGNAL_CHECKED": "PASS",
+      "MODEL_AUDIO_CHECKED": "UNAVAILABLE_IN_CURRENT_RUNTIME",
+      "notion_delivery_status": "NOTION_OK"
+    },
+    {
+      "verse_ref": "24:47",
+      "mapping_start": 250.037237,
+      "mapping_end": 268.636421,
+      "source_file": "032-Genesis-24-47-PocketTorah-r1.mp3",
+      "study_file": "032-Genesis-24-47-PocketTorah-study-r2.mp3",
+      "source_duration": 18.625306,
+      "study_duration": 22.413061,
+      "source_signal": {
+        "leading_below_-45db_s": 0.42,
+        "trailing_below_-45db_s": 0.16,
+        "peak_dbfs": 0.11
+      },
+      "study_signal": {
+        "leading_below_-45db_s": 0.48,
+        "trailing_below_-45db_s": 0.2,
+        "peak_dbfs": 0.27
+      },
+      "MAPPING_CONFIRMED": "PASS",
+      "SIGNAL_CHECKED": "PASS",
+      "MODEL_AUDIO_CHECKED": "UNAVAILABLE_IN_CURRENT_RUNTIME",
+      "notion_delivery_status": "NOTION_OK"
+    },
+    {
+      "verse_ref": "24:48",
+      "mapping_start": 268.636421,
+      "mapping_end": 286.237146,
+      "source_file": "032-Genesis-24-48-PocketTorah-r1.mp3",
+      "study_file": "032-Genesis-24-48-PocketTorah-study-r2.mp3",
+      "source_duration": 17.632653,
+      "study_duration": 21.211429,
+      "source_signal": {
+        "leading_below_-45db_s": 0.2,
+        "trailing_below_-45db_s": 0.02,
+        "peak_dbfs": 1.04
+      },
+      "study_signal": {
+        "leading_below_-45db_s": 0.24,
+        "trailing_below_-45db_s": 0.08,
+        "peak_dbfs": 1.06
+      },
+      "MAPPING_CONFIRMED": "PASS",
+      "SIGNAL_CHECKED": "PASS",
+      "MODEL_AUDIO_CHECKED": "UNAVAILABLE_IN_CURRENT_RUNTIME",
+      "notion_delivery_status": "NOTION_OK"
+    },
+    {
+      "verse_ref": "24:49",
+      "mapping_start": 286.237146,
+      "mapping_end": 302.537554,
+      "source_file": "032-Genesis-24-49-PocketTorah-r1.mp3",
+      "study_file": "032-Genesis-24-49-PocketTorah-study-r2.mp3",
+      "source_duration": 16.326531,
+      "study_duration": 19.644082,
+      "source_signal": {
+        "leading_below_-45db_s": 0.08,
+        "trailing_below_-45db_s": 0.24,
+        "peak_dbfs": 0.46
+      },
+      "study_signal": {
+        "leading_below_-45db_s": 0.08,
+        "trailing_below_-45db_s": 0.28,
+        "peak_dbfs": 0.51
+      },
+      "MAPPING_CONFIRMED": "PASS",
+      "SIGNAL_CHECKED": "PASS",
+      "MODEL_AUDIO_CHECKED": "UNAVAILABLE_IN_CURRENT_RUNTIME",
+      "notion_delivery_status": "NOTION_OK"
+    },
+    {
+      "verse_ref": "24:50",
+      "mapping_start": 302.537554,
+      "mapping_end": 313.590253,
+      "source_file": "032-Genesis-24-50-PocketTorah-r1.mp3",
+      "study_file": "032-Genesis-24-50-PocketTorah-study-r2.mp3",
+      "source_duration": 11.102041,
+      "study_duration": 13.322449,
+      "source_signal": {
+        "leading_below_-45db_s": 0.18,
+        "trailing_below_-45db_s": 0.0,
+        "peak_dbfs": 1.88
+      },
+      "study_signal": {
+        "leading_below_-45db_s": 0.2,
+        "trailing_below_-45db_s": 0.0,
+        "peak_dbfs": 1.82
+      },
+      "MAPPING_CONFIRMED": "PASS",
+      "SIGNAL_CHECKED": "PASS",
+      "MODEL_AUDIO_CHECKED": "UNAVAILABLE_IN_CURRENT_RUNTIME",
+      "notion_delivery_status": "NOTION_OK"
+    },
+    {
+      "verse_ref": "24:51",
+      "mapping_start": 313.590253,
+      "mapping_end": 321.717237,
+      "source_file": "032-Genesis-24-51-PocketTorah-r1.mp3",
+      "study_file": "032-Genesis-24-51-PocketTorah-study-r2.mp3",
+      "source_duration": 8.176327,
+      "study_duration": 9.795918,
+      "source_signal": {
+        "leading_below_-45db_s": 0.42,
+        "trailing_below_-45db_s": 0.0,
+        "peak_dbfs": 2.24
+      },
+      "study_signal": {
+        "leading_below_-45db_s": 0.48,
+        "trailing_below_-45db_s": 0.0,
+        "peak_dbfs": 2.3
+      },
+      "MAPPING_CONFIRMED": "PASS",
+      "SIGNAL_CHECKED": "PASS",
+      "MODEL_AUDIO_CHECKED": "UNAVAILABLE_IN_CURRENT_RUNTIME",
+      "notion_delivery_status": "NOTION_OK"
+    },
+    {
+      "verse_ref": "24:52",
+      "mapping_start": 321.717237,
+      "mapping_end": 339.59175,
+      "source_file": "032-Genesis-24-52-PocketTorah-r1.mp3",
+      "study_file": "032-Genesis-24-52-PocketTorah-study-r2.mp3",
+      "source_duration": 17.92,
+      "study_duration": 21.524898,
+      "source_signal": {
+        "leading_below_-45db_s": 0.0,
+        "trailing_below_-45db_s": 0.04,
+        "peak_dbfs": 2.94
+      },
+      "study_signal": {
+        "leading_below_-45db_s": 0.0,
+        "trailing_below_-45db_s": 0.04,
+        "peak_dbfs": 2.67
+      },
+      "MAPPING_CONFIRMED": "PASS",
+      "SIGNAL_CHECKED": "PASS",
+      "MODEL_AUDIO_CHECKED": "UNAVAILABLE_IN_CURRENT_RUNTIME",
+      "notion_delivery_status": "NOTION_OK"
+    }
+  ]
+}
